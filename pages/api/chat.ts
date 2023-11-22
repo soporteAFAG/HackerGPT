@@ -1,5 +1,5 @@
 import { OpenAIError, OpenAIStream } from '@/pages/api/openaistream';
-import { PalmStream } from '@/pages/api/palmstream';
+import { HackerGPTStream } from '@/pages/api/hackergptstream';
 import { ChatBody, Message } from '@/types/chat';
 
 // @ts-expect-error
@@ -33,7 +33,7 @@ enum ModelType {
 const getTokenLimit = (model: string) => {
   switch (model) {
     case ModelType.GPT35TurboInstruct:
-      return 4000;
+      return 8000;
     case ModelType.GoogleBrowsing:
       return 8000;
     case ModelType.GPT4:
@@ -46,7 +46,17 @@ const getTokenLimit = (model: string) => {
 const handler = async (req: Request): Promise<Response> => {
   try {
     const authToken = req.headers.get('Authorization');
-    let { model, messages } = (await req.json()) as ChatBody;
+    let { messages, model, max_tokens, temperature, stream } =
+      (await req.json()) as ChatBody;
+
+    max_tokens = max_tokens || 1000;
+    stream = stream || true;
+
+    const defaultTemperature = process.env.HACKERGPT_TEMPERATURE
+      ? parseFloat(process.env.HACKERGPT_TEMPERATURE)
+      : 0.6;
+    temperature = temperature ?? defaultTemperature;
+
     const tokenLimit = getTokenLimit(model);
 
     if (!tokenLimit) {
@@ -56,10 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    let reservedTokens = 1500;
-    if (model === 'gpt-3.5-turbo') {
-      reservedTokens = 2000;
-    }
+    let reservedTokens = 2000;
 
     await init((imports) => WebAssembly.instantiate(wasm, imports));
     const encoding = new Tiktoken(
@@ -263,14 +270,19 @@ const handler = async (req: Request): Promise<Response> => {
     encoding.free();
 
     if (userStatusOk) {
-      let stream;
+      let streamResult;
       if (model === ModelType.GPT35TurboInstruct) {
-        stream = await PalmStream(messagesToSend);
+        streamResult = await HackerGPTStream(
+          messagesToSend,
+          temperature,
+          max_tokens,
+          stream
+        );
       } else {
-        stream = await OpenAIStream(model, messagesToSend, answerMessage);
+        streamResult = await OpenAIStream(model, messagesToSend, answerMessage);
       }
 
-      return new Response(stream, {
+      return new Response(streamResult, {
         headers: corsHeaders,
       });
     } else {
