@@ -27,9 +27,8 @@ import { getPortalUrl } from '@/components/Payments/stripePayments';
 import { useLogOut } from '@/components/Authorization/LogOutButton';
 import { useRouter } from 'next/navigation';
 
-import firebase from '@/utils/server/firebase-client-init';
-
 import { ApiKey } from '@/types/api';
+import { ClipLoader } from 'react-spinners';
 
 interface Props {
   open: boolean;
@@ -74,11 +73,26 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
   const [keyCreated, setKeyCreated] = useState(false);
   const [userApiKeys, setUserApiKeys] = useState<ApiKey[]>([]);
 
+  const [isCreatingKey, setIsCreatingKey] = useState(false);
+  const [isDeletingKey, setIsDeletingKey] = useState(false);
+  const [isFetchingUserApiKeys, setFetchingUserApiKey] = useState(false);
+
+  const [createErrorMessage, setCreateErrorMessage] = useState('');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  const [revokeErrorMessage, setRevokeErrorMessage] = useState('');
+  const [isRevokeButtonDisabled, setIsRevokeButtonDisabled] = useState(false);
+
   const handleCreateNewKey = async () => {
     if (!auth.currentUser) {
-      console.error('User not authenticated');
+      setCreateErrorMessage('User not authenticated');
+      setIsButtonDisabled(false);
       return;
     }
+
+    setIsCreatingKey(true);
+    setIsButtonDisabled(true);
+    setCreateErrorMessage('');
 
     const createApiKeyUrl = `${process.env.NEXT_PUBLIC_CREATE_API_KEY_FIREBASE_FUNCTION_URL}`;
 
@@ -95,45 +109,57 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
       });
 
       if (!response.ok) {
-        try {
-          const errorText = await response.text();
-          const errorMessage = errorText || `Error code: ${response.status}`;
-          console.error(`Error creating API key: ${errorMessage}`);
-        } catch (parseError) {
-          console.error(
-            `Error creating API key, status code: ${response.status}`
-          );
-        }
-        return;
+        const errorText = await response.text();
+        const errorMessage = errorText || `Error code: ${response.status}`;
+        setCreateErrorMessage(`Error creating API key: ${errorMessage}`);
+        setIsButtonDisabled(false);
+        setIsCreatingKey(false);
+        return false;
       }
 
       const newKey = await response.json();
-
       const creationTime = new Date(newKey.created).toLocaleString();
 
       setNewToken(newKey.key);
       setShowTokenPopup(true);
       setKeyCreated(true);
-
       setUserApiKeys((prevKeys) => [
         ...prevKeys,
         { ...newKey, created: creationTime },
       ]);
+      setIsCreatingKey(false);
+      return true;
     } catch (error) {
-      console.error('Error creating API key:', error);
+      if (error instanceof Error) {
+        setCreateErrorMessage('Failed to create key: ' + error.message);
+      } else {
+        setCreateErrorMessage(
+          'Failed to create key: An unknown error occurred'
+        );
+      }
+    } finally {
+      setIsButtonDisabled(false);
+      setIsCreatingKey(false);
+      return false;
     }
   };
 
   const handleDeleteKey = async (keyId: string | undefined) => {
     if (!auth.currentUser) {
-      console.error('User not authenticated');
+      setRevokeErrorMessage('User not authenticated');
+      setIsRevokeButtonDisabled(false);
       return;
     }
 
     if (!keyId) {
-      console.error('Key ID is required');
+      setRevokeErrorMessage('Key ID is required');
+      setIsRevokeButtonDisabled(false);
       return;
     }
+
+    setIsDeletingKey(true);
+    setIsRevokeButtonDisabled(true);
+    setRevokeErrorMessage('');
 
     const deleteApiKeyUrl = `${process.env.NEXT_PUBLIC_DELETE_API_KEY_FIREBASE_FUNCTION_URL}`;
 
@@ -150,30 +176,41 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
       });
 
       if (!response.ok) {
-        try {
-          const errorText = await response.text();
-          const errorMessage = errorText || `Error code: ${response.status}`;
-          console.error(`Error deleting API key: ${errorMessage}`);
-        } catch (parseError) {
-          console.error(
-            `Error deleting API key, status code: ${response.status}`
-          );
-        }
-        return;
+        const errorText = await response.text();
+        const errorMessage = errorText || `Error code: ${response.status}`;
+        setRevokeErrorMessage(`Error deleting API key: ${errorMessage}`);
+        setIsRevokeButtonDisabled(false);
+        setIsDeletingKey(false);
+        return false;
       }
 
       await response.json();
       setUserApiKeys((prevKeys) => prevKeys.filter((key) => key.id !== keyId));
+      setIsRevokeButtonDisabled(false);
+      setIsDeletingKey(false);
+      return true;
     } catch (error) {
-      console.error('Error deleting API key:', error);
+      if (error instanceof Error) {
+        setRevokeErrorMessage('Failed to delete key: ' + error.message);
+      } else {
+        setRevokeErrorMessage(
+          'Failed to delete key: An unknown error occurred'
+        );
+      }
+      setIsRevokeButtonDisabled(false);
+      setIsDeletingKey(false);
+      return false;
     }
   };
 
   const fetchUserApiKeys = async () => {
     if (!auth.currentUser) {
       console.error('User not authenticated');
+      setFetchingUserApiKey(false);
       return;
     }
+
+    setFetchingUserApiKey(true);
 
     const fetchApiKeysUrl = `${process.env.NEXT_PUBLIC_FETCH_API_KEYS_FIREBASE_FUNCTION_URL}`;
 
@@ -192,18 +229,22 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
           const errorText = await response.text();
           const errorMessage = errorText || `Error code: ${response.status}`;
           console.error(`Error fetching user API keys: ${errorMessage}`);
+          setFetchingUserApiKey(false);
         } catch (parseError) {
           console.error(
             `Error fetching user API keys:, status code: ${response.status}`
           );
+          setFetchingUserApiKey(false);
         }
         return;
       }
 
       const keys = await response.json();
+      setFetchingUserApiKey(false);
       return keys;
     } catch (error) {
       console.error('Error fetching user API keys:', error);
+      setFetchingUserApiKey(false);
       return [];
     }
   };
@@ -287,19 +328,27 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
   const [apiKeyToRevoke, setApiKeyToRevoke] = useState('');
   const [apicensoredKeyToRevoke, setcensoredKeyApiKeyToRevoke] = useState('');
 
+  const handleOpenCreateKeyModal = () => {
+    setCreateErrorMessage('');
+    setShowTokenPopup(true);
+  };
+
   const handleRevokeClick = (
     apiKey: SetStateAction<string>,
     censoredKey: string
   ) => {
     setApiKeyToRevoke(apiKey);
     setcensoredKeyApiKeyToRevoke(censoredKey);
+    setRevokeErrorMessage('');
     setShowRevokeModal(true);
   };
 
   const handleRevokeConfirm = async () => {
     if (apiKeyToRevoke) {
-      await handleDeleteKey(apiKeyToRevoke);
-      setShowRevokeModal(false);
+      const deletionSuccess = await handleDeleteKey(apiKeyToRevoke);
+      if (deletionSuccess) {
+        setShowRevokeModal(false);
+      }
     }
   };
 
@@ -433,96 +482,97 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                             for guidance.
                           </p>
                         </div>
-                        {isPremium &&
-                          isUserLoggedIn &&
-                          userApiKeys.length > 0 && (
-                            <div className="mb-4 overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200 text-center">
-                                <thead className="bg-white dark:bg-hgpt-dark-gray">
-                                  <tr>
-                                    <th
-                                      scope="col"
-                                      className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
-                                    >
-                                      Name
-                                    </th>
-                                    <th
-                                      scope="col"
-                                      className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
-                                    >
-                                      Key
-                                    </th>
-                                    <th
-                                      scope="col"
-                                      className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
-                                    >
-                                      Created
-                                    </th>
-                                    <th
-                                      scope="col"
-                                      className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
-                                    >
-                                      Last Used
-                                    </th>
-                                    <th
-                                      scope="col"
-                                      className="px-2 py-3 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
-                                    >
-                                      {/* Empty for action buttons */}
-                                    </th>
+                        {isFetchingUserApiKeys ? (
+                          <div className="flex justify-center py-4">
+                            <ClipLoader size={30} color="white" />
+                          </div>
+                        ) : userApiKeys.length > 0 ? (
+                          <div className="mb-4 overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 text-center">
+                              <thead className="bg-white dark:bg-hgpt-dark-gray">
+                                <tr>
+                                  <th
+                                    scope="col"
+                                    className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
+                                  >
+                                    Name
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
+                                  >
+                                    Key
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
+                                  >
+                                    Created
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
+                                  >
+                                    Last Used
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="px-2 py-3 text-xs font-bold uppercase tracking-wider text-black dark:text-white"
+                                  ></th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 bg-white text-center dark:bg-hgpt-dark-gray">
+                                {userApiKeys.map((key, index) => (
+                                  <tr key={index}>
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
+                                      {key.keyName.length > 15
+                                        ? `${key.keyName.substring(0, 15)}...`
+                                        : key.keyName}
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
+                                      {key.censoredKey}
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
+                                      {key.created
+                                        ? new Date(
+                                            key.created
+                                          ).toLocaleDateString()
+                                        : 'Never'}
+                                    </td>
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-black dark:text-white">
+                                      {key.lastUsed
+                                        ? new Date(
+                                            key.lastUsed
+                                          ).toLocaleDateString()
+                                        : 'Never'}
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium">
+                                      <button
+                                        onClick={() =>
+                                          handleRevokeClick(
+                                            key.id,
+                                            key.censoredKey
+                                          )
+                                        }
+                                        className="text-black hover:text-hgpt-chat-gray dark:text-white dark:hover:text-hgpt-hover-white"
+                                      >
+                                        <IconTrash size={18} strokeWidth={2} />
+                                      </button>
+                                    </td>
                                   </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white text-center dark:bg-hgpt-dark-gray">
-                                  {userApiKeys.map((key, index) => (
-                                    <tr key={index}>
-                                      <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
-                                        {key.keyName.length > 15
-                                          ? `${key.keyName.substring(0, 15)}...`
-                                          : key.keyName}
-                                      </td>
-                                      <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
-                                        {key.censoredKey}
-                                      </td>
-                                      <td className="whitespace-nowrap px-4 py-4 text-sm text-black dark:text-white">
-                                        {key.created
-                                          ? new Date(
-                                              key.created
-                                            ).toLocaleDateString()
-                                          : 'Never'}
-                                      </td>
-                                      <td className="whitespace-nowrap px-6 py-4 text-sm text-black dark:text-white">
-                                        {key.lastUsed
-                                          ? new Date(
-                                              key.lastUsed
-                                            ).toLocaleDateString()
-                                          : 'Never'}
-                                      </td>
-                                      <td className="whitespace-nowrap px-4 py-4 text-sm font-medium">
-                                        <button
-                                          onClick={() =>
-                                            handleRevokeClick(
-                                              key.id,
-                                              key.censoredKey
-                                            )
-                                          }
-                                          className="text-black hover:text-hgpt-chat-gray dark:text-white dark:hover:text-hgpt-hover-white"
-                                        >
-                                          <IconTrash
-                                            size={18}
-                                            strokeWidth={2}
-                                          />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="py-4 text-center">
+                            No API keys found.
+                          </div>
+                        )}
                         <button
                           type="button"
                           className="mt-4 w-full rounded-lg bg-blue-500 px-4 py-2 text-white shadow hover:bg-blue-600 focus:outline-none"
-                          onClick={() => setShowTokenPopup(true)}
+                          onClick={handleOpenCreateKeyModal}
                         >
                           Create New Secret Key
                         </button>
@@ -557,14 +607,25 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                               placeholder="My Test Key"
                               value={keyName}
                               onChange={(e) => setKeyName(e.target.value)}
-                              className="mt-2 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray"
+                              className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray"
                             />
+                            {createErrorMessage && (
+                              <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-700">
+                                {createErrorMessage}
+                              </div>
+                            )}
                             <button
                               className="mt-4 w-full rounded bg-blue-500 py-2 px-4 text-white"
                               onClick={handleCreateNewKey}
-                              disabled={!keyName}
+                              disabled={
+                                !keyName || isButtonDisabled || isCreatingKey
+                              }
                             >
-                              Create
+                              {isCreatingKey ? (
+                                <ClipLoader size={20} color="white" />
+                              ) : (
+                                'Create'
+                              )}
                             </button>
                           </>
                         ) : (
@@ -572,7 +633,6 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                             <h2 className="mb-2 self-start text-sm text-black dark:text-white">
                               Your new key:
                             </h2>{' '}
-                            {/* Added self-start */}
                             <p className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray">
                               {newToken}
                             </p>
@@ -580,7 +640,6 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                               Please copy it now and write it down somewhere
                               safe. You will not be able to see it again.
                             </p>{' '}
-                            {/* Added self-start */}
                             <button
                               className="w-full rounded bg-blue-500 py-2 px-4 text-white"
                               onClick={() => {
@@ -613,6 +672,11 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                         <div className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray">
                           {apicensoredKeyToRevoke}
                         </div>
+                        {revokeErrorMessage && (
+                          <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-700">
+                            {revokeErrorMessage}
+                          </div>
+                        )}
                         <div className="flex justify-end space-x-2">
                           <button
                             className="rounded bg-gray-300 py-2 px-4 text-black hover:bg-gray-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700"
@@ -623,8 +687,13 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                           <button
                             className="rounded bg-red-600 py-2 px-4 text-white hover:bg-red-700"
                             onClick={handleRevokeConfirm}
+                            disabled={isRevokeButtonDisabled || isDeletingKey}
                           >
-                            Revoke key
+                            {isDeletingKey ? (
+                              <ClipLoader size={20} color="white" />
+                            ) : (
+                              'Revoke key'
+                            )}
                           </button>
                         </div>
                       </div>
