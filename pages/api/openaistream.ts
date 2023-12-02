@@ -42,15 +42,12 @@ export const OpenAIStream = async (
       },
       ...messages,
     ],
-    max_tokens: 800,
+    max_tokens: 1000,
     temperature: 0.4,
     stream: true,
   };
 
-  let url: string;
-
   if (model === 'gpt-3.5-turbo') {
-    url = `https://api.openai.com/v1/chat/completions`;
     commonBody['messages'] = [
       {
         role: 'system',
@@ -60,15 +57,9 @@ export const OpenAIStream = async (
       answerMessage,
     ];
   } else if (model === 'gpt-4') {
-    url = `https://api.openai.com/v1/chat/completions`;
-    commonBody['model'] = `gpt-4-1106-preview`;
-    commonBody['messages'] = [
-      {
-        role: 'system',
-        content: SYSTEM_PROMPT,
-      },
-      ...messages,
-    ];
+    if (answerMessage.content.trim()) {
+      commonBody['messages'].push(answerMessage);
+    }
   }
 
   const requestOptions = {
