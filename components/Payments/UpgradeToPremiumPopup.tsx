@@ -1,7 +1,14 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
-import { IconX, IconCircleCheck } from '@tabler/icons-react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { initFirebaseApp } from '@/utils/server/firebase-client-init';
+import {
+  IconX,
+  IconCircleCheck,
+  IconCurrencyBitcoin,
+  IconLockOpen,
+} from '@tabler/icons-react';
 
 interface Props {
   isOpen: boolean;
@@ -16,10 +23,58 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [token, setToken] = useState<string | null>(null);
+  const [cryptoError, setCryptoError] = useState<string | null>(null);
+
+  const app = initFirebaseApp();
+  const auth = getAuth(app);
+
+  let user = auth.currentUser;
+
+  const getToken = async () => {
+    if (user) {
+      try {
+        setToken(await user.getIdToken(true));
+      } catch (error) {
+        return;
+      }
+    }
+  };
+
+  useEffect(() => {
+    getToken();
+  }, [isOpen]);
 
   const upgradeToPremium = () => {
     if (checkoutUrl) {
       router.push(checkoutUrl);
+    }
+  };
+
+  const payWithCrypto = async () => {
+    const coinbaseChargeUrl = process.env.NEXT_PUBLIC_COINBASE_CHARGE_URL;
+
+    if (!coinbaseChargeUrl) {
+      throw new Error('Missing Coinbase Charge Url environment variable');
+    }
+
+    const res = await fetch(coinbaseChargeUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+
+    const { hosted_url } = data;
+
+    if (
+      hosted_url &&
+      hosted_url.startsWith('https://commerce.coinbase.com/pay')
+    ) {
+      window.open(hosted_url, '_blank');
+    } else {
+      setCryptoError('Error creating payment link');
     }
   };
 
@@ -113,12 +168,44 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                             USD $29/mo
                           </div>
                         </div>
-                        <button
-                          onClick={upgradeToPremium}
-                          className="mb-4 w-full rounded bg-green-600 px-4 py-2 font-bold text-white transition duration-200 hover:bg-green-700"
-                        >
-                          Upgrade to Plus
-                        </button>
+                        <div className="flex flex-col gap-0 md:flex-row md:gap-2">
+                          <button
+                            onClick={upgradeToPremium}
+                            className="mb-4 flex w-full flex-row items-center justify-center gap-y-3 rounded bg-green-600 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-green-700"
+                          >
+                            <IconLockOpen
+                              color={'white'}
+                              size={22}
+                              strokeWidth={2}
+                            />
+                            Upgrade to Plus
+                          </button>
+                          <button
+                            onClick={payWithCrypto}
+                            className="mb-4 flex w-full flex-row items-center justify-center gap-y-3 rounded bg-orange-600 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-orange-700"
+                          >
+                            <IconCurrencyBitcoin
+                              color={'white'}
+                              size={22}
+                              strokeWidth={2}
+                            />
+                            Pay with Crypto
+                          </button>
+                        </div>
+                        {cryptoError && (
+                          <div className="mb-2 text-red-500">{cryptoError}</div>
+                        )}
+                        <div className="mb-5 flex items-center">
+                          <div className="text-container text-sm">
+                            <p>
+                              <span className="font-bold">
+                                Note for crypto payment:
+                              </span>{' '}
+                              It can take several minutes for the payment to
+                              complete. Once it went through refresh the page.
+                            </p>
+                          </div>
+                        </div>
                         <div className="mb-2 flex items-center">
                           <div className="icon-container mr-2">
                             <IconCircleCheck
