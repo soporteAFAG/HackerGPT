@@ -8,28 +8,32 @@ const isSubfinderCommand = (message: string) => {
   return commandPattern.test(message);
 };
 
-const createAnswerPromptSubfinder = (domain: string, subfinderData: string) => {
-  let additionalNote = '';
-  let instructionsForAdditionalNote = '';
-  if (subfinderData.length > 5000) {
-    subfinderData = subfinderData.slice(0, 5000);
-    additionalNote =
-      'Note: The list of subdomains has been truncated due to length.';
-    instructionsForAdditionalNote =
-      '1.1 **Incorporate the Additional Note**: If the list of subdomains is truncated due to its length, include the additional note provided to inform the user.';
-  }
+const createAnswerPromptSubfinder = (domain: string, includeSources: boolean, subfinderData: string) => {
 
-  const currentDateTime = new Date();
-  const formattedDateTime =
-    currentDateTime.toLocaleDateString() +
-    ' ' +
-    currentDateTime.toLocaleTimeString();
+    let firstStepInstruction = '1. **Identify and List Subdomains**: Present a clear list of all identified subdomains ';
 
-  const messageContent = endent`
+    if (includeSources) {
+        firstStepInstruction += 'with sources like this for example "hackergpt.co,[digitorus,crtsh]" ';
+    }
+
+    firstStepInstruction += 'in code block. Just each domain on new line.';
+
+    let additionalNote = '';
+    let instructionsForAdditionalNote = '';
+    if (subfinderData.length > 5000) {
+      subfinderData = subfinderData.slice(0, 5000);
+      additionalNote = 'Note: The list of subdomains has been truncated due to length.';
+      instructionsForAdditionalNote = '1.1 **Incorporate the Additional Note**: If the list of subdomains is truncated due to its length, include the additional note provided to inform the user.';
+    }
+
+    const currentDateTime = new Date();
+    const formattedDateTime = currentDateTime.toLocaleDateString() + " " + currentDateTime.toLocaleTimeString();
+
+    const messageContent = endent`
     Generate a comprehensive report for the Subfinder scan conducted on the domain "${domain}". The report should be clear, concise, and user-friendly, highlighting key findings and insights for easy interpretation. Assume that the Subfinder tool has already completed the scan and provided detailed data on subdomains. Your task is to analyze this data and present it in a structured format.
     
     Instructions:
-    1. **Identify and List Subdomains**: Present a clear list of all identified subdomains in code block. Just each domain on new line.
+    ${firstStepInstruction}
     ${instructionsForAdditionalNote}
     2. **Highlight Key Observations**: Analyze the subdomains for any notable characteristics or security implications. Focus on aspects like unusual subdomain patterns, potential security risks, or subdomains that may need immediate attention.
     3. **Provide Insightful Analysis**: Offer insights based on the subdomains' structure, naming conventions, and other relevant details derived from the scan.
@@ -52,12 +56,12 @@ const createAnswerPromptSubfinder = (domain: string, subfinderData: string) => {
     ### Recommended Actions
     - [Propose methods and tools for investigating the identified subdomains further (Not Required)]
     `;
-
-  return messageContent;
+    
+    return messageContent
 };
 
 const displayHelpGuide = () => {
-  return `
+    return `
     Usage:
       /subfinder [flags]
   
@@ -68,35 +72,32 @@ const displayHelpGuide = () => {
     FILTER:
       -m, -match string[]   subdomain or list of subdomain to match (comma separated)
       -f, -filter string[]   subdomain or list of subdomain to filter (comma separated)
-  
+
     OUTPUT:
-      -oI, -ip   include host IP in output (-active only)
-  `;
+      -cs, -collect-sources   include all sources in the output (-json only)  `;
 };
 
 const parseCommandLine = (input: string) => {
   const args = input.split(' ');
   const params: {
-    domain: string[];
-    match: string[];
-    filter: string[];
-    includeIP: boolean;
-    error: string | null;
+    domain: string[],
+    match: string[],
+    filter: string[],
+    includeSources: boolean,
+    error: string | null,
   } = {
     domain: [],
     match: [],
     filter: [],
-    includeIP: false,
+    includeSources: false,
     error: null,
   };
 
   const maxDomainLength = 50;
   const maxSubdomainLength = 255;
 
-  const isValidDomain = (domain: string) =>
-    /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain);
-  const isValidSubdomain = (subdomain: string) =>
-    /^[a-zA-Z0-9.-]+$/.test(subdomain);
+  const isValidDomain = (domain: string) => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain);
+  const isValidSubdomain = (subdomain: string) => /^[a-zA-Z0-9.-]+$/.test(subdomain);
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -136,158 +137,121 @@ const parseCommandLine = (input: string) => {
           }
         }
         break;
-      case '-oI':
-      case '-ip':
-        params.includeIP = true;
+      case '-cs':
+      case '--collect-sources':
+        params.includeSources = true;
         break;
     }
   }
 
   return params;
 };
+  
+export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: HeadersInit | undefined, enableSubfinderFeature: boolean, OpenAIStream: { (model: string, messages: Message[], answerMessage: Message): Promise<ReadableStream<any>>; (arg0: any, arg1: any, arg2: any): any; }, model: string, messagesToSend: Message[], answerMessage: Message) {
+    if (!enableSubfinderFeature) {
+      return new Response(
+        'The Subfinder feature is disabled.',
+        { status: 200, headers: corsHeaders }
+      );
+    }
 
-export async function handleSubfinderRequest(
-  lastMessage: Message,
-  corsHeaders: HeadersInit | undefined,
-  enableSubfinderFeature: boolean,
-  OpenAIStream: {
-    (model: string, messages: Message[], answerMessage: Message): Promise<
-      ReadableStream<any>
-    >;
-    (arg0: any, arg1: any, arg2: any): any;
-  },
-  model: string,
-  messagesToSend: Message[],
-  answerMessage: Message
-) {
-  if (!enableSubfinderFeature) {
-    return new Response('The Subfinder feature is disabled.', {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+    const parts = lastMessage.content.split(" ");
+    if (parts.includes("-h")) {
+      return new Response(displayHelpGuide(), { status: 200, headers: corsHeaders });
+    }
 
-  const parts = lastMessage.content.split(' ');
-  if (parts.includes('-h')) {
-    return new Response(displayHelpGuide(), {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+    const params = parseCommandLine(lastMessage.content);
 
-  const params = parseCommandLine(lastMessage.content);
+    if (params.error) {
+      return new Response(params.error, { status: 200, headers: corsHeaders });
+    }
+  
+    let subfinderUrl = `${process.env.SECRET_SUBFINDER_FUNCTION_URL}/api/chat/plugins/subfinder?`;
+    subfinderUrl += params.domain.map(d => `domain=${d}`).join('&');
+    subfinderUrl += params.match.map(m => `&match=${m}`).join('');
+    subfinderUrl += params.filter.map(f => `&filter=${f}`).join('');
+    subfinderUrl += params.includeSources ? '&includeSources=false' : '';
+  
+    const headers = new Headers(corsHeaders);
+    headers.set('Content-Type', 'text/event-stream');
+    headers.set('Cache-Control', 'no-cache');
+    headers.set('Connection', 'keep-alive');
 
-  if (params.error) {
-    return new Response(params.error, { status: 200, headers: corsHeaders });
-  }
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendMessage = (data: string, addExtraLineBreaks: boolean = false) => {
+          const formattedData = addExtraLineBreaks ? `${data}\n\n` : data;
+          controller.enqueue(new TextEncoder().encode(formattedData));
+        };
+    
+        sendMessage('Starting Subfinder process...', true);
+    
+        const intervalId = setInterval(() => {
+          sendMessage('Still processing. Please wait...', true);
+        }, 5000);
 
-  let subfinderUrl = `${process.env.SECRET_SUBFINDER_FUNCTION_URL}/api/chat/plugins/subfinder?`;
-  subfinderUrl += params.domain.map((d) => `domain=${d}`).join('&');
-  subfinderUrl += params.match.map((m) => `&match=${m}`).join('');
-  subfinderUrl += params.filter.map((f) => `&filter=${f}`).join('');
-  subfinderUrl += params.includeIP ? '&includeIP=false' : '';
-
-  const headers = new Headers(corsHeaders);
-  headers.set('Content-Type', 'text/event-stream');
-  headers.set('Cache-Control', 'no-cache');
-  headers.set('Connection', 'keep-alive');
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      const sendMessage = (
-        data: string,
-        addExtraLineBreaks: boolean = false
-      ) => {
-        const formattedData = addExtraLineBreaks ? `${data}\n\n` : data;
-        controller.enqueue(new TextEncoder().encode(formattedData));
-      };
-
-      sendMessage('Starting Subfinder process...', true);
-
-      const intervalId = setInterval(() => {
-        sendMessage('Still processing. Please wait...', true);
-      }, 5000);
-
-      try {
-        const subfinderResponse = await fetch(subfinderUrl, {
-          method: 'GET',
-          headers: {
-            Authorization: `${process.env.SECRET_AUTH_SUBFINDER}`,
+        try {
+          const subfinderResponse = await fetch(subfinderUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `${process.env.SECRET_AUTH_SUBFINDER}`,
+              Header: "example.google.com"
           },
-        });
-
-        let subfinderData = await subfinderResponse.text();
-
-        subfinderData = processSubfinderData(subfinderData);
-
-        if (subfinderData.length === 0) {
-          const noDataMessage = `No subdomains found for ${params.domain.join(
-            ', '
-          )}.`;
-          return new Response(noDataMessage, {
-            status: 200,
-            headers: corsHeaders,
           });
-        }
 
-        clearInterval(intervalId);
-        sendMessage('Subfinder process completed.', true);
-
-        const answerPrompt = createAnswerPromptSubfinder(
-          params.domain.join(', '),
-          subfinderData
-        );
-        answerMessage.content = answerPrompt;
-
-        const openAIResponseStream = await OpenAIStream(
-          model,
-          messagesToSend,
-          answerMessage
-        );
-        const reader = openAIResponseStream.getReader();
-
-        // @ts-expect-error
-        reader.read().then(function processText({ done, value }) {
-          if (done) {
-            controller.close();
-            return;
+          let subfinderData = await subfinderResponse.text();
+                
+          subfinderData = processSubfinderData(subfinderData);
+          
+          if (subfinderData.length === 0) {
+            const noDataMessage = `No subdomains found for ${params.domain.join(', ')}.`;
+            return new Response(noDataMessage, { status: 200, headers: corsHeaders });
+         }
+          
+          clearInterval(intervalId);
+          sendMessage('Subfinder process completed.', true);  
+ 
+          const answerPrompt = createAnswerPromptSubfinder(params.domain.join(', '), params.includeSources, subfinderData);
+          answerMessage.content = answerPrompt;
+    
+          const openAIResponseStream = await OpenAIStream(model, messagesToSend, answerMessage);
+          const reader = openAIResponseStream.getReader();
+    
+          // @ts-expect-error
+          reader.read().then(function processText({ done, value }) {
+            if (done) {
+              controller.close();
+              return;
+            }
+    
+            const decodedValue = new TextDecoder().decode(value, { stream: true });
+            sendMessage(decodedValue);
+    
+            return reader.read().then(processText);
+          });
+    
+        } catch (error) {
+          clearInterval(intervalId);
+          if (error instanceof Error) {
+              return new Response(error.message, { status: 200, headers: corsHeaders });
           }
 
-          const decodedValue = new TextDecoder().decode(value, {
-            stream: true,
-          });
-          sendMessage(decodedValue);
-
-          return reader.read().then(processText);
-        });
-      } catch (error) {
-        clearInterval(intervalId);
-        if (error instanceof Error) {
-          return new Response(error.message, {
-            status: 200,
-            headers: corsHeaders,
-          });
-        }
-
-        console.error('Error fetching from subfinder:', error);
-        const errorMessage = (error as Error).message;
-        sendMessage(`Error: ${errorMessage}`, true);
-        return new Response('An error occurred while processing the request.', {
-          status: 200,
-          headers: corsHeaders,
-        });
+          console.error('Error fetching from subfinder:', error);
+          const errorMessage = (error as Error).message;
+          sendMessage(`Error: ${errorMessage}`, true);
+          return new Response('An error occurred while processing the request.', { status: 200, headers: corsHeaders });
       }
-    },
-  });
-
-  return new Response(stream, { headers });
-}
+      }
+    });      
+    
+    return new Response(stream, { headers });
+  }
 
 const processSubfinderData = (data: string) => {
-  return data
-    .split('\n')
-    .filter((line) => line && !line.startsWith('data:') && line.trim() !== '')
-    .join('');
-};
-
-export { isSubfinderCommand, createAnswerPromptSubfinder };
+    return data
+      .split('\n')
+      .filter(line => line && !line.startsWith('data:') && line.trim() !== '')
+      .join(''); 
+}
+  
+export { isSubfinderCommand, createAnswerPromptSubfinder}
