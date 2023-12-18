@@ -10,38 +10,58 @@ export const isKatanaCommand = (message: string) => {
   return commandPattern.test(trimmedMessage);
 };
 
-const displayHelpGuide = () => {
-  return `
-  [Katana](https://github.com/projectdiscovery/katana) is a fast crawler focused on execution in automation pipelines offering both headless and non-headless crawling.
+type SectionKey = 'input' | 'configuration' | 'headless' | 'scope' | 'filter';
 
-    Usage:
-      /katana [flags]
-  
-    Flags:
-    INPUT:
-       -u, -list string[]  target url / list to crawl
-    
-    CONFIGURATION
-       -jc, -js-crawl               enable endpoint parsing / crawling in javascript file
-       -iqp, -ignore-query-params   Ignore crawling same path with different query-param values
-       -timeout int                 time to wait for request in seconds (default 10)
+const displayHelpGuide = (section: string | null) => {
+  const helpPrefix = '```\nUsage:\n' + '   katana [flags]\n\n' + 'Flags:\n';
 
-    HEADLESS:
-       -hl, -headless          enable headless hybrid crawling (experimental)
-       -xhr, -xhr-extraction   extract xhr request url,method in jsonl output
+  const sections = {
+    input: 'INPUT:\n' + '  -u, -list string[]  target url / list to crawl\n',
+    configuration:
+      'CONFIGURATION:\n' +
+      '  -jc, -js-crawl               enable endpoint parsing / crawling in javascript file\n' +
+      '  -iqp, -ignore-query-params   Ignore crawling same path with different query-param values\n' +
+      '  -timeout int                 time to wait for request in seconds (default 10)\n',
+    headless:
+      'HEADLESS:\n' +
+      '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
+      '  -xhr, -xhr-extraction   extract xhr request url,method in jsonl output\n',
+    scope:
+      'SCOPE:\n' +
+      '  -cs, -crawl-scope string[]        in scope url regex to be followed by crawler\n' +
+      '  -cos, -crawl-out-scope string[]   out of scope url regex to be excluded by crawler\n' +
+      '  -do, -display-out-scope           display external endpoint from scoped crawling\n',
+    filter:
+      'FILTER:\n' +
+      '  -mr, -match-regex string[]        regex or list of regex to match on output url (cli, file)\n' +
+      '  -fr, -filter-regex string[]       regex or list of regex to filter on output url (cli, file)\n' +
+      '  -em, -extension-match string[]    match output for given extension (eg, -em php,html,js)\n' +
+      '  -ef, -extension-filter string[]   filter output for given extension (eg, -ef png,css)\n' +
+      '  -mdc, -match-condition string     match response with dsl based condition\n' +
+      '  -fdc, -filter-condition string    filter response with dsl based condition\n',
+  };
 
-    SCOPE:
-       -cs, -crawl-scope string[]        in scope url regex to be followed by crawler
-       -cos, -crawl-out-scope string[]   out of scope url regex to be excluded by crawler
-       -do, -display-out-scope           display external endpoint from scoped crawling
+  const fullHelpGuide =
+    '[Katana](https://github.com/projectdiscovery/katana) is a fast crawler focused on execution in automation pipelines offering both headless and non-headless crawling.\n\n' +
+    helpPrefix +
+    sections.input +
+    '\n' +
+    sections.configuration +
+    '\n' +
+    sections.headless +
+    '\n' +
+    sections.scope +
+    '\n' +
+    sections.filter +
+    '\n```';
 
-    FILTER:
-       -mr, -match-regex string[]        regex or list of regex to match on output url (cli, file)
-       -fr, -filter-regex string[]       regex or list of regex to filter on output url (cli, file)
-       -em, -extension-match string[]    match output for given extension (eg, -em php,html,js)
-       -ef, -extension-filter string[]   filter output for given extension (eg, -ef png,css)
-       -mdc, -match-condition string     match response with dsl based condition
-       -fdc, -filter-condition string    filter response with dsl based condition`;
+  const sectionKey = section ? section.toLowerCase() : null;
+
+  if (sectionKey && sectionKey in sections) {
+    return helpPrefix + sections[sectionKey as SectionKey];
+  }
+
+  return fullHelpGuide;
 };
 
 interface KatanaParams {
@@ -62,6 +82,7 @@ interface KatanaParams {
   filterCondition: string;
   timeout: number;
   error: string | null;
+  help?: string;
 }
 
 const parseKatanaCommandLine = (input: string): KatanaParams => {
@@ -96,7 +117,16 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
     filterCondition: '',
     timeout: 10,
     error: null,
+    help: undefined,
   };
+
+  const helpIndex = args.indexOf('-h');
+  if (helpIndex !== -1) {
+    const nextArg = args[helpIndex + 1];
+    const helpSection = nextArg && !nextArg.startsWith('-') ? nextArg : null;
+    params.help = displayHelpGuide(helpSection);
+    return params;
+  }
 
   const isInteger = (value: string) => /^[0-9]+$/.test(value);
   const isWithinLength = (value: string) => value.length <= MAX_PARAM_LENGTH;
@@ -123,7 +153,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const url = args[++i];
           if (!isValidUrl(url)) {
-            params.error = `Invalid URL provided for '${
+            params.error = `🚨 Invalid URL provided for '${
               args[i - 1]
             }' flag: ${url}`;
             return params;
@@ -131,7 +161,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.urls.push(url);
         }
         if (params.urls.length === 0) {
-          params.error = `No URL provided for '${args[i]}' flag`;
+          params.error = `🚨 No URL provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -140,7 +170,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         if (args[i + 1] && isInteger(args[i + 1])) {
           params.depth = parseInt(args[++i]);
         } else {
-          params.error = `Invalid depth value for '${args[i]}' flag`;
+          params.error = `🚨 Invalid depth value for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -165,7 +195,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const scope = args[++i];
           if (!isValidRegex(scope)) {
-            params.error = `Invalid crawl scope regex pattern for '${
+            params.error = `🚨 Invalid crawl scope regex pattern for '${
               args[i - 1]
             }' flag: ${scope}`;
             return params;
@@ -173,7 +203,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.crawlScope.push(scope);
         }
         if (params.crawlScope.length === 0) {
-          params.error = `No crawl scope regex pattern provided for '${args[i]}' flag`;
+          params.error = `🚨 No crawl scope regex pattern provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -182,7 +212,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const outScope = args[++i];
           if (!isValidRegex(outScope)) {
-            params.error = `Invalid crawl out-scope regex pattern for '${
+            params.error = `🚨 Invalid crawl out-scope regex pattern for '${
               args[i - 1]
             }' flag: ${outScope}`;
             return params;
@@ -190,7 +220,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.crawlOutScope.push(outScope);
         }
         if (params.crawlOutScope.length === 0) {
-          params.error = `No crawl out-scope regex pattern provided for '${args[i]}' flag`;
+          params.error = `🚨 No crawl out-scope regex pattern provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -203,7 +233,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const regex = args[++i];
           if (!isValidRegex(regex)) {
-            params.error = `Invalid match regex for '${
+            params.error = `🚨 Invalid match regex for '${
               args[i - 1]
             }' flag: ${regex}`;
             return params;
@@ -211,7 +241,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.matchRegex.push(regex);
         }
         if (params.matchRegex.length === 0) {
-          params.error = `No match regex provided for '${args[i]}' flag`;
+          params.error = `🚨 No match regex provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -220,7 +250,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const regex = args[++i];
           if (!isValidRegex(regex)) {
-            params.error = `Invalid filter regex for '${
+            params.error = `🚨 Invalid filter regex for '${
               args[i - 1]
             }' flag: ${regex}`;
             return params;
@@ -228,7 +258,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.filterRegex.push(regex);
         }
         if (params.filterRegex.length === 0) {
-          params.error = `No filter regex provided for '${args[i]}' flag`;
+          params.error = `🚨 No filter regex provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -239,7 +269,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.extensionMatch.push(ext);
         }
         if (params.extensionMatch.length === 0) {
-          params.error = `No extension match provided for '${args[i]}' flag`;
+          params.error = `🚨 No extension match provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -250,7 +280,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
           params.extensionFilter.push(ext);
         }
         if (params.extensionFilter.length === 0) {
-          params.error = `No extension filter provided for '${args[i]}' flag`;
+          params.error = `🚨 No extension filter provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -259,7 +289,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         if (args[i + 1] && !args[i + 1].startsWith('-')) {
           params.matchCondition = args[++i];
         } else {
-          params.error = `No match condition provided for '${args[i]}' flag`;
+          params.error = `🚨 No match condition provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -268,7 +298,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         if (args[i + 1] && !args[i + 1].startsWith('-')) {
           params.filterCondition = args[++i];
         } else {
-          params.error = `No filter condition provided for '${args[i]}' flag`;
+          params.error = `🚨 No filter condition provided for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -276,12 +306,12 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
         if (args[i + 1] && isInteger(args[i + 1])) {
           let timeoutValue = parseInt(args[++i]);
           if (timeoutValue > 300) {
-            params.error = `Timeout value exceeds the maximum limit of 300 seconds`;
+            params.error = `🚨 Timeout value exceeds the maximum limit of 90 seconds`;
             return params;
           }
           params.timeout = timeoutValue;
         } else {
-          params.error = `Invalid timeout value for '${args[i]}' flag`;
+          params.error = `🚨 Invalid timeout value for '${args[i]}' flag`;
           return params;
         }
         break;
@@ -316,15 +346,11 @@ export async function handleKatanaRequest(
     });
   }
 
-  const parts = lastMessage.content.split(' ');
-  if (parts.includes('-h')) {
-    return new Response(displayHelpGuide(), {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
-
   const params = parseKatanaCommandLine(lastMessage.content);
+
+  if (params.help) {
+    return new Response(params.help, { status: 200, headers: corsHeaders });
+  }
 
   if (params.error) {
     return new Response(params.error, { status: 200, headers: corsHeaders });
@@ -393,10 +419,10 @@ export async function handleKatanaRequest(
       params.filterCondition
     )}`;
   }
-  if (params.timeout !== 10) { 
+  if (params.timeout !== 10) {
     katanaUrl += `&timeout=${params.timeout}`;
   }
-  
+
   const headers = new Headers(corsHeaders);
   headers.set('Content-Type', 'text/event-stream');
   headers.set('Cache-Control', 'no-cache');
@@ -411,7 +437,7 @@ export async function handleKatanaRequest(
         const formattedData = addExtraLineBreaks ? `${data}\n\n` : data;
         controller.enqueue(new TextEncoder().encode(formattedData));
       };
-      
+
       sendMessage('🚀 Starting the scan. It might take a minute.', true);
 
       const intervalId = setInterval(() => {
@@ -426,7 +452,7 @@ export async function handleKatanaRequest(
             Host: 'plugins.hackergpt.co',
           },
         });
-        
+
         if (!katanaResponse.ok) {
           throw new Error(`HTTP error! status: ${katanaResponse.status}`);
         }
@@ -434,8 +460,11 @@ export async function handleKatanaRequest(
         const jsonResponse = await katanaResponse.json();
 
         const outputString = jsonResponse.output;
-        
-        if (outputString && outputString.includes('Katana process exited with code 1')) {
+
+        if (
+          outputString &&
+          outputString.includes('Katana process exited with code 1')
+        ) {
           const errorMessage = `🚨 An error occurred while running your query. Please try again or check your input.`;
           clearInterval(intervalId);
           sendMessage(errorMessage, true);
