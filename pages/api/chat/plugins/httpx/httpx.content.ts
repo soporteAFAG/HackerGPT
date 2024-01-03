@@ -226,7 +226,8 @@ const parseCommandLine = (input: string) => {
     return params;
   }
 
-  const args = input.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   const isInteger = (value: string) => /^[0-9]+$/.test(value);
@@ -773,188 +774,232 @@ export async function handleHttpxRequest(
     return rateLimitCheck.response;
   }
 
-  let httpxUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/httpx?`;
+  let httpxUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/httpx`;
 
-  httpxUrl += `target=${params.target.join(',')}`;
+  interface HttpxRequestBody {
+    target?: string[];
+    status_code?: boolean;
+    content_length?: boolean;
+    content_type?: boolean;
+    location?: boolean;
+    favicon?: boolean;
+    hash?: string;
+    jarm?: boolean;
+    response_time?: boolean;
+    line_count?: boolean;
+    word_count?: boolean;
+    title?: boolean;
+    body_preview?: string;
+    web_server?: boolean;
+    tech_detect?: boolean;
+    method?: boolean;
+    websocket?: boolean;
+    ip?: boolean;
+    cname?: boolean;
+    asn?: boolean;
+    cdn?: boolean;
+    probe?: boolean;
+    match_code?: string;
+    match_length?: string;
+    match_line_count?: string;
+    match_word_count?: string;
+    match_favicon?: string[];
+    match_string?: string;
+    match_regex?: string;
+    match_cdn?: string[];
+    match_response_time?: string;
+    match_condition?: string;
+    extract_regex?: string;
+    extract_preset?: string;
+    filter_code?: string;
+    filter_error_page?: boolean;
+    filter_length?: string;
+    filter_line_count?: string;
+    filter_word_count?: string;
+    filter_favicon?: string;
+    filter_string?: string;
+    filter_regex?: string;
+    filter_cdn?: string;
+    filter_response_time?: string;
+    filter_condition?: string;
+    strip?: string;
+    json?: boolean;
+    include_response_header?: boolean;
+    include_response?: boolean;
+    include_response_base64?: boolean;
+    include_chain?: boolean;
+    timeout?: number;
+  }
+
+  let requestBody: HttpxRequestBody = {};
+
+  // INPUT
+  if (params.target && params.target.length > 0) {
+    requestBody.target = params.target;
+  }
+
+  // PROBES
   if (params.status_code) {
-    httpxUrl += '&status_code=true';
+    requestBody.status_code = params.status_code;
   }
   if (params.content_length) {
-    httpxUrl += '&content_length=true';
+    requestBody.content_length = params.content_length;
   }
   if (params.content_type) {
-    httpxUrl += '&content_type=true';
+    requestBody.content_type = params.content_type;
   }
   if (params.location) {
-    httpxUrl += '&location=true';
+    requestBody.location = params.location;
   }
   if (params.favicon) {
-    httpxUrl += '&favicon=true';
+    requestBody.favicon = params.favicon;
   }
   if (params.hash) {
-    httpxUrl += `&hash=${encodeURIComponent(params.hash)}`;
+    requestBody.hash = params.hash;
   }
   if (params.jarm) {
-    httpxUrl += '&jarm=true';
+    requestBody.jarm = params.jarm;
   }
   if (params.response_time) {
-    httpxUrl += '&response_time=true';
+    requestBody.response_time = params.response_time;
   }
   if (params.line_count) {
-    httpxUrl += '&line_count=true';
+    requestBody.line_count = params.line_count;
   }
   if (params.word_count) {
-    httpxUrl += '&word_count=true';
+    requestBody.word_count = params.word_count;
   }
   if (params.title) {
-    httpxUrl += '&title=true';
+    requestBody.title = params.title;
   }
   if (params.body_preview !== undefined) {
-    httpxUrl += `&body_preview=${params.body_preview}`;
+    requestBody.body_preview = params.body_preview.toString();
   }
   if (params.web_server) {
-    httpxUrl += '&web_server=true';
+    requestBody.web_server = params.web_server;
   }
   if (params.tech_detect) {
-    httpxUrl += '&tech_detect=true';
+    requestBody.tech_detect = params.tech_detect;
   }
   if (params.method) {
-    httpxUrl += '&method=true';
+    requestBody.method = params.method;
   }
   if (params.websocket) {
-    httpxUrl += '&websocket=true';
+    requestBody.websocket = params.websocket;
   }
   if (params.ip) {
-    httpxUrl += '&ip=true';
+    requestBody.ip = params.ip;
   }
   if (params.cname) {
-    httpxUrl += '&cname=true';
+    requestBody.cname = params.cname;
   }
   if (params.asn) {
-    httpxUrl += '&asn=true';
+    requestBody.asn = params.asn;
   }
   if (params.cdn) {
-    httpxUrl += '&cdn=true';
+    requestBody.cdn = params.cdn;
   }
   if (params.probe) {
-    httpxUrl += '&probe=true';
+    requestBody.probe = params.probe;
   }
+
+  // MATCHERS
   if (params.match_code) {
-    httpxUrl += `&match_code=${encodeURIComponent(params.match_code)}`;
+    requestBody.match_code = params.match_code;
   }
   if (params.match_length) {
-    httpxUrl += `&match_length=${encodeURIComponent(params.match_length)}`;
+    requestBody.match_length = params.match_length;
   }
   if (params.match_line_count) {
-    httpxUrl += `&match_line_count=${encodeURIComponent(
-      params.match_line_count,
-    )}`;
+    requestBody.match_line_count = params.match_line_count;
   }
   if (params.match_word_count) {
-    httpxUrl += `&match_word_count=${encodeURIComponent(
-      params.match_word_count,
-    )}`;
+    requestBody.match_word_count = params.match_word_count;
   }
   if (params.match_favicon && params.match_favicon.length > 0) {
-    httpxUrl += `&match_favicon=${params.match_favicon
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.match_favicon = params.match_favicon;
   }
   if (params.match_string) {
-    httpxUrl += `&match_string=${encodeURIComponent(params.match_string)}`;
+    requestBody.match_string = params.match_string;
   }
   if (params.match_regex) {
-    httpxUrl += `&match_regex=${encodeURIComponent(params.match_regex)}`;
+    requestBody.match_regex = params.match_regex;
   }
   if (params.match_cdn && params.match_cdn.length > 0) {
-    httpxUrl += `&match_cdn=${params.match_cdn
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.match_cdn = params.match_cdn;
   }
   if (params.match_response_time) {
-    httpxUrl += `&match_response_time=${encodeURIComponent(
-      params.match_response_time,
-    )}`;
+    requestBody.match_response_time = params.match_response_time;
   }
   if (params.match_condition) {
-    httpxUrl += `&match_condition=${encodeURIComponent(
-      params.match_condition,
-    )}`;
+    requestBody.match_condition = params.match_condition;
   }
+
+  // EXTRACTORS
   if (params.extract_regex && params.extract_regex.length > 0) {
-    httpxUrl += `&extract_regex=${params.extract_regex
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.extract_regex = params.extract_regex.join(',');
   }
   if (params.extract_preset && params.extract_preset.length > 0) {
-    httpxUrl += `&extract_preset=${params.extract_preset
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.extract_preset = params.extract_preset.join(',');
   }
+
+  // FILTERS
   if (params.filter_code) {
-    httpxUrl += `&filter_code=${encodeURIComponent(params.filter_code)}`;
+    requestBody.filter_code = params.filter_code;
   }
   if (params.filter_error_page) {
-    httpxUrl += '&filter_error_page=true';
+    requestBody.filter_error_page = params.filter_error_page;
   }
   if (params.filter_length) {
-    httpxUrl += `&filter_length=${encodeURIComponent(params.filter_length)}`;
+    requestBody.filter_length = params.filter_length;
   }
   if (params.filter_line_count) {
-    httpxUrl += `&filter_line_count=${encodeURIComponent(
-      params.filter_line_count,
-    )}`;
+    requestBody.filter_line_count = params.filter_line_count;
   }
   if (params.filter_word_count) {
-    httpxUrl += `&filter_word_count=${encodeURIComponent(
-      params.filter_word_count,
-    )}`;
+    requestBody.filter_word_count = params.filter_word_count;
   }
   if (params.filter_favicon && params.filter_favicon.length > 0) {
-    httpxUrl += `&filter_favicon=${params.filter_favicon
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.filter_favicon = params.filter_favicon.join(',');
   }
   if (params.filter_string) {
-    httpxUrl += `&filter_string=${encodeURIComponent(params.filter_string)}`;
+    requestBody.filter_string = params.filter_string;
   }
   if (params.filter_regex) {
-    httpxUrl += `&filter_regex=${encodeURIComponent(params.filter_regex)}`;
+    requestBody.filter_regex = params.filter_regex;
   }
   if (params.filter_cdn && params.filter_cdn.length > 0) {
-    httpxUrl += `&filter_cdn=${params.filter_cdn
-      .map(encodeURIComponent)
-      .join(',')}`;
+    requestBody.filter_cdn = params.filter_cdn.join(',');
   }
   if (params.filter_response_time) {
-    httpxUrl += `&filter_response_time=${encodeURIComponent(
-      params.filter_response_time,
-    )}`;
+    requestBody.filter_response_time = params.filter_response_time;
   }
   if (params.filter_condition) {
-    httpxUrl += `&filter_condition=${encodeURIComponent(
-      params.filter_condition,
-    )}`;
+    requestBody.filter_condition = params.filter_condition;
   }
+
+  // ADDITIONAL SETTINGS
   if (params.strip) {
-    httpxUrl += `&strip=${encodeURIComponent(params.strip)}`;
+    requestBody.strip = params.strip;
   }
   if (params.json) {
-    httpxUrl += '&json=true';
+    requestBody.json = params.json;
   }
   if (params.include_response_header) {
-    httpxUrl += '&include_response_header=true';
+    requestBody.include_response_header = params.include_response_header;
   }
   if (params.include_response) {
-    httpxUrl += '&include_response=true';
+    requestBody.include_response = params.include_response;
   }
   if (params.include_response_base64) {
-    httpxUrl += '&include_response_base64=true';
+    requestBody.include_response_base64 = params.include_response_base64;
   }
   if (params.include_chain) {
-    httpxUrl += '&include_chain=true';
+    requestBody.include_chain = params.include_chain;
   }
-  httpxUrl += `&timeout=${params.timeout}`;
+  if (params.timeout && params.timeout !== 15) {
+    requestBody.timeout = params.timeout;
+  }
 
   const headers = new Headers(corsHeaders);
   headers.set('Content-Type', 'text/event-stream');
@@ -983,11 +1028,13 @@ export async function handleHttpxRequest(
 
       try {
         const httpxResponse = await fetch(httpxUrl, {
-          method: 'GET',
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `${process.env.SECRET_AUTH_PLUGINS}`,
             Host: 'plugins.hackergpt.co',
           },
+          body: JSON.stringify(requestBody),
         });
 
         const jsonResponse = await httpxResponse.json();
@@ -1010,9 +1057,7 @@ export async function handleHttpxRequest(
         }
 
         if (!outputString && outputString.length === 0) {
-          const noDataMessage = `🔍 Didn't find anything for ${params.target.join(
-            ', ',
-          )}.`;
+          const noDataMessage = `🔍 No results found with the given parameters.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();
@@ -1060,7 +1105,8 @@ const transformUserQueryToHttpxCommand = (lastMessage: Message) => {
   \`\`\`json
   { "command": "httpx [flags]" }
   \`\`\`
-  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. When using '-extract-regex' or others regex flags, provide regex patterns that are properly escaped for JSON strings. 
+  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. 
+  IMPORTANT: Ensure the command is properly escaped to be valid JSON. Ensure the command uses simpler regex patterns compatible with the 'httpx' tool's regex engine. Avoid advanced regex features like negative lookahead.
 
   Command Construction Guidelines:
   1. **Direct Host Inclusion**: Directly embed target hosts in the command instead of using file references.

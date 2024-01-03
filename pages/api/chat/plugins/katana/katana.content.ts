@@ -110,7 +110,8 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
     return params;
   }
 
-  const args = input.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   const isInteger = (value: string) => /^[0-9]+$/.test(value);
@@ -431,71 +432,76 @@ export async function handleKatanaRequest(
     return rateLimitCheck.response;
   }
 
-  let katanaUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/katana?`;
+  let katanaUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/katana`;
 
-  if (params.urls.length > 0) {
-    katanaUrl += params.urls
-      .map((u) => `urls=${encodeURIComponent(u)}`)
-      .join('&');
+  interface KatanaRequestBody {
+    urls?: string[];
+    depth?: number;
+    jsCrawl?: boolean;
+    ignoreQueryParams?: boolean;
+    headless?: boolean;
+    xhrExtraction?: boolean;
+    crawlScope?: string[];
+    crawlOutScope?: string[];
+    displayOutScope?: boolean;
+    matchRegex?: string[];
+    filterRegex?: string[];
+    extensionMatch?: string[];
+    extensionFilter?: string[];
+    matchCondition?: string;
+    filterCondition?: string;
+    timeout?: number;
   }
-  if (params.depth !== 3) {
-    katanaUrl += `&depth=${params.depth}`;
+
+  let requestBody: KatanaRequestBody = {};
+
+  if (params.urls && params.urls.length > 0) {
+    requestBody.urls = params.urls;
+  }
+  if (params.depth && params.depth !== 3) {
+    requestBody.depth = params.depth;
   }
   if (params.jsCrawl) {
-    katanaUrl += `&jsCrawl=${params.jsCrawl}`;
+    requestBody.jsCrawl = params.jsCrawl;
   }
   if (params.ignoreQueryParams) {
-    katanaUrl += `&ignoreQueryParams=${params.ignoreQueryParams}`;
+    requestBody.ignoreQueryParams = params.ignoreQueryParams;
   }
   if (params.headless) {
-    katanaUrl += `&headless=${params.headless}`;
+    requestBody.headless = params.headless;
   }
   if (params.xhrExtraction) {
-    katanaUrl += `&xhrExtraction=${params.xhrExtraction}`;
+    requestBody.xhrExtraction = params.xhrExtraction;
   }
-  if (params.crawlScope.length > 0) {
-    katanaUrl += `&crawlScope=${params.crawlScope
-      .map((cs) => encodeURIComponent(cs))
-      .join(',')}`;
+  if (params.crawlScope && params.crawlScope.length > 0) {
+    requestBody.crawlScope = params.crawlScope;
   }
-  if (params.crawlOutScope.length > 0) {
-    katanaUrl += `&crawlOutScope=${params.crawlOutScope
-      .map((cos) => encodeURIComponent(cos))
-      .join(',')}`;
+  if (params.crawlOutScope && params.crawlOutScope.length > 0) {
+    requestBody.crawlOutScope = params.crawlOutScope;
   }
   if (params.displayOutScope) {
-    katanaUrl += `&displayOutScope=${params.displayOutScope}`;
+    requestBody.displayOutScope = params.displayOutScope;
   }
-  if (params.matchRegex.length > 0) {
-    katanaUrl += `&matchRegex=${params.matchRegex
-      .map((mr) => encodeURIComponent(mr))
-      .join(',')}`;
+  if (params.matchRegex && params.matchRegex.length > 0) {
+    requestBody.matchRegex = params.matchRegex;
   }
-  if (params.filterRegex.length > 0) {
-    katanaUrl += `&filterRegex=${params.filterRegex
-      .map((fr) => encodeURIComponent(fr))
-      .join(',')}`;
+  if (params.filterRegex && params.filterRegex.length > 0) {
+    requestBody.filterRegex = params.filterRegex;
   }
-  if (params.extensionMatch.length > 0) {
-    katanaUrl += `&extensionMatch=${params.extensionMatch
-      .map((em) => encodeURIComponent(em))
-      .join(',')}`;
+  if (params.extensionMatch && params.extensionMatch.length > 0) {
+    requestBody.extensionMatch = params.extensionMatch;
   }
-  if (params.extensionFilter.length > 0) {
-    katanaUrl += `&extensionFilter=${params.extensionFilter
-      .map((ef) => encodeURIComponent(ef))
-      .join(',')}`;
+  if (params.extensionFilter && params.extensionFilter.length > 0) {
+    requestBody.extensionFilter = params.extensionFilter;
   }
   if (params.matchCondition) {
-    katanaUrl += `&matchCondition=${encodeURIComponent(params.matchCondition)}`;
+    requestBody.matchCondition = params.matchCondition;
   }
   if (params.filterCondition) {
-    katanaUrl += `&filterCondition=${encodeURIComponent(
-      params.filterCondition,
-    )}`;
+    requestBody.filterCondition = params.filterCondition;
   }
-  if (params.timeout !== 15) {
-    katanaUrl += `&timeout=${params.timeout}`;
+  if (params.timeout && params.timeout !== 15) {
+    requestBody.timeout = params.timeout;
   }
 
   const headers = new Headers(corsHeaders);
@@ -525,11 +531,13 @@ export async function handleKatanaRequest(
 
       try {
         const katanaResponse = await fetch(katanaUrl, {
-          method: 'GET',
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `${process.env.SECRET_AUTH_PLUGINS}`,
             Host: 'plugins.hackergpt.co',
           },
+          body: JSON.stringify(requestBody),
         });
 
         if (!katanaResponse.ok) {
@@ -556,9 +564,7 @@ export async function handleKatanaRequest(
         }
 
         if (!outputString && outputString.length === 0) {
-          const noDataMessage = `🔍 Didn't find anything for ${params.urls.join(
-            ', ',
-          )}.`;
+          const noDataMessage = `🔍 No results found with the given parameters.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();
@@ -606,7 +612,8 @@ const transformUserQueryToKatanaCommand = (lastMessage: Message) => {
   \`\`\`json
   { "command": "katana [flags]" }
   \`\`\`
-  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. 
+  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. 
+  IMPORTANT: Ensure the command is properly escaped to be valid JSON. Ensure the command uses simpler regex patterns compatible with the 'katana' tool's regex engine. Avoid advanced regex features like negative lookahead.
 
   Command Construction Guidelines:
   1. **Direct Domain Inclusion**: When scanning a list of domains, directly embed them in the command instead of using file references.

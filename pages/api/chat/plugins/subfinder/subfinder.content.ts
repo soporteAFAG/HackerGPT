@@ -87,7 +87,8 @@ const parseCommandLine = (input: string) => {
     return params;
   }
 
-  const args = input.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   const isInteger = (value: string) => /^[0-9]+$/.test(value);

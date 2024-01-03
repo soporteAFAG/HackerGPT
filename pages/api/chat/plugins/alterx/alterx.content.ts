@@ -58,9 +58,8 @@ const parseAlterxCommandLine = (input: string): AlterxParams => {
     return params;
   }
 
-  const sanitizedInput = input.replace(/[^a-zA-Z0-9,.\-\s]/g, '');
-
-  const args = sanitizedInput.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   for (let i = 0; i < args.length; i++) {

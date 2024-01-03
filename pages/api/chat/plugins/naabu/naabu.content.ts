@@ -104,7 +104,8 @@ const parseNaabuCommandLine = (input: string): NaabuParams => {
     return params;
   }
 
-  const args = input.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   const isValidHostnameOrIP = (value: string) => {
@@ -360,66 +361,84 @@ export async function handleNaabuRequest(
     return rateLimitCheck.response;
   }
 
-  let naabuUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/naabu?`;
+  let naabuUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/naabu`;
 
-  const formatHostParam = (host: string[] | string) => {
-    return Array.isArray(host)
-      ? host.map((h) => `host=${encodeURIComponent(h)}`).join('&')
-      : `host=${encodeURIComponent(host)}`;
-  };
+  interface NaabuRequestBody {
+    host?: string | string[];
+    port?: string;
+    timeout?: number;
+    scanAllIPs?: boolean;
+    outputJson?: boolean;
+    topPorts?: string;
+    excludePorts?: string;
+    portThreshold?: number;
+    excludeCDN?: boolean;
+    displayCDN?: boolean;
+    hostDiscovery?: boolean;
+    skipHostDiscovery?: boolean;
+    probeIcmpEcho?: boolean;
+    probeIcmpTimestamp?: boolean;
+    probeIcmpAddressMask?: boolean;
+    arpPing?: boolean;
+    ndPing?: boolean;
+    revPtr?: boolean;
+  }
 
-  naabuUrl += formatHostParam(params.host);
+  let requestBody: NaabuRequestBody = {};
 
-  if (params.port.length > 0) {
-    naabuUrl += `&port=${params.port}`;
+  if (params.host) {
+    requestBody.host = params.host;
+  }
+  if (params.port) {
+    requestBody.port = params.port;
   }
   if (params.timeout && params.timeout !== 10) {
-    naabuUrl += `&timeout=${params.timeout * 1000}`;
+    requestBody.timeout = params.timeout * 1000;
   }
   if (params.scanAllIPs) {
-    naabuUrl += `&scanAllIPs=${params.scanAllIPs}`;
+    requestBody.scanAllIPs = params.scanAllIPs;
   }
   if (params.outputJson) {
-    naabuUrl += `&outputJson=${params.outputJson}`;
+    requestBody.outputJson = params.outputJson;
   }
   if (params.topPorts) {
-    naabuUrl += `&topPorts=${encodeURIComponent(params.topPorts)}`;
+    requestBody.topPorts = params.topPorts;
   }
   if (params.excludePorts) {
-    naabuUrl += `&excludePorts=${encodeURIComponent(params.excludePorts)}`;
+    requestBody.excludePorts = params.excludePorts;
   }
   if (params.portThreshold && params.portThreshold > 0) {
-    naabuUrl += `&portThreshold=${params.portThreshold}`;
+    requestBody.portThreshold = params.portThreshold;
   }
   if (params.excludeCDN) {
-    naabuUrl += `&excludeCDN=true`;
+    requestBody.excludeCDN = params.excludeCDN;
   }
   if (params.displayCDN) {
-    naabuUrl += `&displayCDN=true`;
+    requestBody.displayCDN = params.displayCDN;
   }
   if (params.hostDiscovery) {
-    naabuUrl += `&hostDiscovery=true`;
+    requestBody.hostDiscovery = params.hostDiscovery;
   }
   if (params.skipHostDiscovery) {
-    naabuUrl += `&skipHostDiscovery=true`;
+    requestBody.skipHostDiscovery = params.skipHostDiscovery;
   }
   if (params.probeIcmpEcho) {
-    naabuUrl += `&probeIcmpEcho=true`;
+    requestBody.probeIcmpEcho = params.probeIcmpEcho;
   }
   if (params.probeIcmpTimestamp) {
-    naabuUrl += `&probeIcmpTimestamp=true`;
+    requestBody.probeIcmpTimestamp = params.probeIcmpTimestamp;
   }
   if (params.probeIcmpAddressMask) {
-    naabuUrl += `&probeIcmpAddressMask=true`;
+    requestBody.probeIcmpAddressMask = params.probeIcmpAddressMask;
   }
   if (params.arpPing) {
-    naabuUrl += `&arpPing=true`;
+    requestBody.arpPing = params.arpPing;
   }
   if (params.ndPing) {
-    naabuUrl += `&ndPing=true`;
+    requestBody.ndPing = params.ndPing;
   }
   if (params.revPtr) {
-    naabuUrl += `&revPtr=true`;
+    requestBody.revPtr = params.revPtr;
   }
 
   const headers = new Headers(corsHeaders);
@@ -449,11 +468,13 @@ export async function handleNaabuRequest(
 
       try {
         const naabuResponse = await fetch(naabuUrl, {
-          method: 'GET',
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `${process.env.SECRET_AUTH_PLUGINS}`,
             Host: 'plugins.hackergpt.co',
           },
+          body: JSON.stringify(requestBody),
         });
 
         if (!naabuResponse.ok) {
@@ -480,7 +501,7 @@ export async function handleNaabuRequest(
         }
 
         if (!outputString || outputString.length === 0) {
-          const noDataMessage = `🔍 I've just finished going through your command: "${lastMessage.content}". Looks like there aren't any valid ports to report for "${params.host}".`;
+          const noDataMessage = `🔍 No results found with the given parameters.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();
@@ -528,7 +549,8 @@ const transformUserQueryToNaabuCommand = (lastMessage: Message) => {
   \`\`\`json
   { "command": "naabu [flags]" }
   \`\`\`
-  Replace '[flags]' with the actual flags and values, directly including the hosts if necessary. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. 
+  Replace '[flags]' with the actual flags and values, directly including the hosts if necessary. Include additional flags only if they are specifically relevant to the request.
+  IMPORTANT: Ensure the command is properly escaped to be valid JSON. Ensure the command uses simpler regex patterns compatible with the 'naabu' tool's regex engine. Avoid advanced regex features like negative lookahead.
 
   Command Construction Guidelines for Naabu:
   1. **Direct Host Inclusion**: When scanning a list of hosts, directly embed them in the command instead of using file references.

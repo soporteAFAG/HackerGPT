@@ -78,7 +78,8 @@ const parseGauCommandLine = (input: string): GauParams => {
     return params;
   }
 
-  const args = input.split(' ');
+  const trimmedInput = input.trim();
+  const args = trimmedInput.split(' ');
   args.shift();
 
   // const isInteger = (value: string) => /^[0-9]+$/.test(value);
@@ -347,7 +348,7 @@ export async function handleGauRequest(
         let gauData = await gauResponse.text();
 
         if (gauData.length === 0) {
-          const noDataMessage = `🔍 Didn't find any URLs for ${params.targets}.`;
+          const noDataMessage = `🔍 Didn't find any URLs based on the provided command.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();

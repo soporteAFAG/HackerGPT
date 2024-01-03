@@ -1012,9 +1012,7 @@ export async function handleNucleiRequest(
         }
 
         if (!outputString && outputString.length === 0) {
-          const noDataMessage = `🔍 Didn't find anything for ${params.target.join(
-            ', ',
-          )}.`;
+          const noDataMessage = `🔍 No results found with the given parameters.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();
@@ -1062,7 +1060,8 @@ const transformUserQueryToNucleiCommand = (lastMessage: Message) => {
   \`\`\`json
   { "command": "nuclei [flags]" }
   \`\`\`
-  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON.  
+  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request.
+  IMPORTANT: Ensure the command is properly escaped to be valid JSON. Ensure the command uses simpler regex patterns compatible with the 'nuclei' tool's regex engine. Avoid advanced regex features like negative lookahead.
 
   Command Construction Guidelines:
   1. **Direct Host Inclusion**: Directly embed target hosts in the command instead of using file references.
