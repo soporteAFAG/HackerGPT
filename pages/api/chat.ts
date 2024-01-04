@@ -42,7 +42,7 @@ enum ModelType {
 const getTokenLimit = (model: string) => {
   switch (model) {
     case ModelType.GPT35TurboInstruct:
-      return 8000;
+      return 7000;
     case ModelType.GPT4:
       return 12000;
     default:
@@ -78,6 +78,25 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     let reservedTokens = 2000;
+
+    const MIN_LAST_MESSAGE_LENGTH = parseInt(
+      process.env.MIN_LAST_MESSAGE_LENGTH || '50',
+      10,
+    );
+    const MAX_LAST_MESSAGE_LENGTH = parseInt(
+      process.env.MAX_LAST_MESSAGE_LENGTH || '1000',
+      10,
+    );
+
+    const lastMessageContent = messages[messages.length - 1].content;
+
+    if (
+      model === ModelType.GPT35TurboInstruct &&
+      (lastMessageContent.length < MIN_LAST_MESSAGE_LENGTH ||
+        lastMessageContent.length > MAX_LAST_MESSAGE_LENGTH)
+    ) {
+      reservedTokens = 3500;
+    }
 
     await init((imports) => WebAssembly.instantiate(wasm, imports));
     const encoding = new Tiktoken(

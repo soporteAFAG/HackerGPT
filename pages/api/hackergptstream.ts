@@ -129,7 +129,7 @@ export const HackerGPTStream = async (
     const PINECONE_QUERY_URL = `https://${process.env.SECRET_PINECONE_INDEX}-${process.env.SECRET_PINECONE_PROJECT_ID}.svc.${process.env.SECRET_PINECONE_ENVIRONMENT}.pinecone.io/query`;
 
     const requestBody = {
-      topK: 5,
+      topK: 3,
       vector: queryEmbedding,
       includeMetadata: true,
       namespace: `${process.env.SECRET_PINECONE_NAMESPACE}`,
@@ -401,7 +401,7 @@ export const HackerGPTStream = async (
 
         systemMessage.content =
           `${process.env.SECRET_OPENAI_SYSTEM_PROMPT} ` +
-          `${process.env.SECRET_PINECONE_SYSTEM_PROMPT}` +
+          `${process.env.SECRET_PINECONE_SYSTEM_PROMPT} ` +
           `Context:\n ${pineconeResults}`;
       }
     }
