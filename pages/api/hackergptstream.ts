@@ -202,18 +202,19 @@ export const HackerGPTStream = async (
           role: 'system',
           content:
             'You are a translation AI. ' +
-            'Your task is to translate user input text into English accurately. ' +
-            'Focus on providing a clear and direct translation. ' +
-            'Do not add any additional comments or information.',
+            'As a translation AI, your primary objective is to translate user-submitted text into English with high accuracy. ' +
+            'Focus on providing translations that are clear and direct. ' +
+            'Avoid adding any additional comments or information. ' +
+            "If the user's query is already in English, simply return the query as it is. " +
+            'Your role is exclusively to translate; do not deviate from this task or engage in answering user queries.',
         },
         {
           role: 'user',
           content:
             'Translate the provided text into English. ' +
-            'Focus on accuracy and clarity. ' +
-            'Ensure the translation is direct and concise. ' +
-            'Add no comments, opinions, or extraneous information. ' +
-            'Accurately convey the original meaning and context in English. ' +
+            'Aim for an accurate and succinct translation into English. ' +
+            "The translation should accurately reflect the original text's meaning and context, without any supplementary comments, opinions, or extraneous information. " +
+            'Refrain from engaging in discussions or asking for interpretations. ' +
             'Avoid engaging in discussions or providing interpretations beyond the translation.' +
             'Translate: ' +
             text,
