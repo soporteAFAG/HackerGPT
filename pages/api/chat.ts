@@ -209,7 +209,8 @@ const handler = async (req: Request): Promise<Response> => {
             if (
               model !== ModelType.GPT4 &&
               tool.toLowerCase() !== 'tools' &&
-              tool.toLowerCase() !== 'subfinder'
+              tool.toLowerCase() !== 'subfinder' &&
+              tool.toLowerCase() !== 'alterx'
             ) {
               const toolUrl = toolUrls[tool];
               return new Response(

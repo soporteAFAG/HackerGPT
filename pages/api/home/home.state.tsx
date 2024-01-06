@@ -1,13 +1,11 @@
 import { Conversation, Message } from '@/types/chat';
 import { ErrorMessage } from '@/types/error';
 import { OpenAIModel, OpenAIModelID } from '@/types/openai';
-import { PluginKey } from '@/types/plugin';
 import { Prompt } from '@/types/prompt';
 
 export interface HomeInitialState {
   apiKey: string;
   selectedToolId: string | null;
-  pluginKeys: PluginKey[];
   loading: boolean;
   lightMode: 'light' | 'dark';
   messageIsStreaming: boolean;
@@ -31,7 +29,6 @@ export const initialState: HomeInitialState = {
   apiKey: '',
   selectedToolId: null,
   loading: false,
-  pluginKeys: [],
   lightMode: 'dark',
   messageIsStreaming: false,
   modelError: null,

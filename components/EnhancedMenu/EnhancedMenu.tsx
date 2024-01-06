@@ -8,7 +8,7 @@ import React, {
 
 import HomeContext from '@/pages/api/home/home.context';
 
-import ToolSelector from './ToolSelector';
+import PluginSelector from './PluginSelector';
 import SearchToggle from './SearchWeb';
 
 import PropTypes from 'prop-types';
@@ -64,7 +64,7 @@ const EnhancedMenu = forwardRef<HTMLDivElement, EnhancedMenuProps>(
             <SearchToggle />
           </div>
           <div className="flex w-full flex-col justify-between md:flex-row">
-            <ToolSelector />
+            <PluginSelector />
           </div>
         </div>
       </div>

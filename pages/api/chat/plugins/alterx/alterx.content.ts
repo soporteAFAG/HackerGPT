@@ -323,7 +323,7 @@ const transformUserQueryToAlterxCommand = (lastMessage: Message) => {
 
   Command Construction Guidelines:
   1. **Direct Subdomain Inclusion**: When generating a wordlist from a list of subdomains, directly embed them in the command instead of using file references.
-    - -l, -list: Specify subdomains directly in the command to use when creating permutations (required).
+    - -l, -list: Specify subdomains directly in the command to use when creating permutations (comma separated e.g -l subdomain1.com,subdomain2.com). (required)
   2. **Selective Flag Use**: Carefully choose flags that are pertinent to the task. The available flags for the 'Alterx' tool include:
     - -p, -pattern: Custom permutation patterns input to generate (optional).
     - -en, -enrich: Enrich wordlist by extracting words from input (optional).

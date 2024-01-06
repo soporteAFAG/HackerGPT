@@ -28,7 +28,7 @@ export const Chatbar = () => {
   });
 
   const {
-    state: { conversations, showChatbar, defaultModelId, pluginKeys },
+    state: { conversations, showChatbar, defaultModelId },
     dispatch: homeDispatch,
     handleNewConversation,
     handleUpdateConversation,

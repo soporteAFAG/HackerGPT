@@ -4,7 +4,9 @@ import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
+
 import { HomeProvider } from '@/pages/api/home/home.context';
+import { PluginProvider } from '@/hooks/PluginProvider';
 
 import '@/styles/globals.css';
 import { PremiumStatusProvider } from '@/hooks/PremiumStatusContext';
@@ -20,7 +22,9 @@ function App({ Component, pageProps }: AppProps<{}>) {
       <QueryClientProvider client={queryClient}>
         <HomeProvider>
           <PremiumStatusProvider>
-            <Component {...pageProps} />
+            <PluginProvider>
+              <Component {...pageProps} />
+            </PluginProvider>
           </PremiumStatusProvider>
         </HomeProvider>
         <Analytics />
