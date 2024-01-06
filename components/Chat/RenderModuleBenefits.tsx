@@ -37,7 +37,7 @@ export function RenderModuleBenefits(props: { moduleName: string | null }) {
         title: "Hacker's Dream AI",
         feature: 'Ready for complex challenges',
         description: 'Available exclusively to Plus users',
-        extra: 'Includes Exclusive Web Browsing plugin',
+        extra: 'Limit 40 messages / 3 hours',
         buttonText: 'Upgrade to Plus',
       };
       break;
