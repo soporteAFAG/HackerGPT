@@ -6,6 +6,7 @@ export interface Plugin {
   icon?: string;
   description?: string;
   categories: string[];
+  githubRepoUrl?: string;
   isInstalled: boolean;
   isPremium: boolean;
 }

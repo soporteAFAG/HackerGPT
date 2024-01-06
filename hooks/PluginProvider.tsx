@@ -1,21 +1,13 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
 
+import { Plugin } from '@/types/plugin';
+
+import { availablePlugins } from '@/components/EnhancedMenu/PluginSelector';
+
 enum ActionTypes {
   INSTALL_PLUGIN = 'INSTALL_PLUGIN',
   UNINSTALL_PLUGIN = 'UNINSTALL_PLUGIN',
 }
-
-type Plugin = {
-  id: number;
-  name: string;
-  selectorName: string;
-  value: any;
-  icon?: string;
-  description?: string;
-  categories: string[];
-  isInstalled: boolean;
-  isPremium: boolean;
-};
 
 const initialState = {
   installedPlugins: [] as Plugin[],
@@ -62,30 +54,23 @@ export const PluginProvider = ({ children }: { children: React.ReactNode }) => {
     const localData = localStorage.getItem('installedPlugins');
     let installedPlugins = localData ? JSON.parse(localData) : [];
 
-    // Check if Subfinder is already installed
-    const subfinderPlugin = {
-      id: 2,
-      name: 'Subfinder',
-      value: 'subfinder',
-      isInstalled: true,
-      isPremium: false,
-    };
+    const defaultPluginIds = [1, 2, 3, 7];
 
-    const isSubfinderInstalled = installedPlugins.some(
-      (plugin: Plugin) => plugin.id === subfinderPlugin.id,
-    );
+    if (!localData) {
+      defaultPluginIds.forEach((id) => {
+        const defaultPlugin = availablePlugins.find((p) => p.id === id);
+        if (defaultPlugin) {
+          installedPlugins.push({ ...defaultPlugin, isInstalled: true });
+        }
+      });
 
-    if (!isSubfinderInstalled) {
-      // If Subfinder is not installed, add it to the installed plugins
-      installedPlugins.push(subfinderPlugin);
       localStorage.setItem(
         'installedPlugins',
         JSON.stringify(installedPlugins),
       );
     }
 
-    // Dispatch an action to update the state with the installed plugins
-    installedPlugins.forEach((plugin: Plugin) => {
+    installedPlugins.forEach((plugin: any) => {
       dispatch({ type: ActionTypes.INSTALL_PLUGIN, payload: plugin });
     });
   }, []);

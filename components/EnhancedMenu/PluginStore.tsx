@@ -1,8 +1,13 @@
 import { Dialog, Transition, Tab } from '@headlessui/react';
 import React, { useState, useEffect, Fragment } from 'react';
-import { XCircleIcon, SearchIcon, XIcon } from '@heroicons/react/outline';
 
-import { IconCloudDownload } from '@tabler/icons-react';
+import {
+  IconX,
+  IconSearch,
+  IconCode,
+  IconCircleX,
+  IconCloudDownload,
+} from '@tabler/icons-react';
 
 import { Plugin } from '@/types/plugin';
 import { usePluginContext } from '@/hooks/PluginProvider';
@@ -130,7 +135,7 @@ function PluginStoreModal({
                       onClick={closeModal}
                       className="text-gray-300 hover:text-gray-500"
                     >
-                      <XIcon className="h-6 w-6" aria-hidden="true" />
+                      <IconX className="h-6 w-6" aria-hidden="true" />
                     </button>
                   </Dialog.Title>
 
@@ -176,7 +181,7 @@ function PluginStoreModal({
                         }`}
                       >
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <SearchIcon
+                          <IconSearch
                             className="h-5 w-5 text-gray-500"
                             aria-hidden="true"
                           />
@@ -192,96 +197,121 @@ function PluginStoreModal({
                     </div>
 
                     {/* Plugin List */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {currentPagePlugins.map((plugin) => (
-                        <div
-                          key={plugin.id}
-                          className="rounded-lg border border-hgpt-light-gray bg-hgpt-dark-gray p-4 shadow "
-                        >
-                          {/* Flex container for image and name/button */}
-                          <div className="flex items-center">
-                            {/* Image container */}
-                            <div className="mr-4 h-20 w-20 flex-shrink-0">
-                              <img
-                                src={plugin.icon}
-                                alt={plugin.name}
-                                className="h-full w-full rounded object-cover"
-                              />
-                            </div>
+                    <div className="grid min-h-[460px] flex-grow grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {currentPagePlugins.length > 0 ? (
+                        currentPagePlugins.map((plugin) => (
+                          <div
+                            key={plugin.id}
+                            className="flex h-[200px] w-full flex-col justify-between rounded-lg border border-hgpt-light-gray bg-hgpt-dark-gray p-4 shadow"
+                          >
+                            <div className="flex items-center">
+                              <div className="mr-4 h-[70px] w-[70px] shrink-0">
+                                <img
+                                  src={plugin.icon}
+                                  alt={plugin.name}
+                                  className="h-full w-full rounded object-cover"
+                                />
+                              </div>
 
-                            {/* Container for name and install button */}
-                            <div className="flex flex-col justify-between">
-                              <h4 className="text-md mb-2 text-white">
-                                {plugin.name}
-                              </h4>
-                              <button
-                                className={`mt-auto inline-flex items-center justify-center rounded px-4 py-2 text-sm ${
-                                  plugin.isInstalled
-                                    ? 'bg-red-500 text-white hover:bg-red-600'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                }`}
-                                onClick={() =>
-                                  plugin.isInstalled
-                                    ? uninstallPlugin(plugin.id)
-                                    : installPlugin(plugin)
-                                }
+                              <div className="flex flex-col justify-between">
+                                <h4 className="flex items-center text-lg text-white">
+                                  {plugin.name}
+                                  {plugin.isPremium && (
+                                    <span className="ml-2 rounded bg-yellow-200 px-2 py-1 text-xs font-semibold uppercase text-yellow-700 shadow">
+                                      Plus
+                                    </span>
+                                  )}
+                                </h4>
+                                <button
+                                  className={`mt-2 inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm ${
+                                    plugin.isInstalled
+                                      ? 'bg-red-500 text-white hover:bg-red-600'
+                                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                                  }`}
+                                  onClick={() =>
+                                    plugin.isInstalled
+                                      ? uninstallPlugin(plugin.id)
+                                      : installPlugin(plugin)
+                                  }
+                                >
+                                  {plugin.isInstalled ? (
+                                    <>
+                                      Uninstall
+                                      <IconCircleX
+                                        className="ml-1 h-4 w-4"
+                                        aria-hidden="true"
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      Install
+                                      <IconCloudDownload
+                                        className="ml-1 h-4 w-4"
+                                        aria-hidden="true"
+                                      />
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            {/* Description and Premium badge */}
+                            <p className="line-clamp-3 h-[60px] text-sm text-white/70">
+                              {plugin.description}
+                            </p>
+
+                            <div className="h-[14px] text-xs text-white/60">
+                              <a
+                                href={plugin.githubRepoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5"
                               >
-                                {plugin.isInstalled ? (
-                                  <>
-                                    Uninstall
-                                    <XCircleIcon
-                                      className="ml-2 h-5 w-5"
-                                      aria-hidden="true"
-                                    />
-                                  </>
-                                ) : (
-                                  <>
-                                    Install
-                                    <IconCloudDownload
-                                      className="ml-2 h-5 w-5"
-                                      aria-hidden="true"
-                                    />
-                                  </>
-                                )}
-                              </button>
+                                View on GitHub
+                                <IconCode
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </a>
                             </div>
                           </div>
-                          {/* Description and Premium badge */}
-                          <p className="mt-4 text-sm text-white/80">
-                            {plugin.description}
+                        ))
+                      ) : (
+                        <div className="col-span-full flex flex-col items-center justify-center p-10">
+                          <p className="text-lg font-semibold text-white">
+                            No plugins found for &quot;{searchTerm}&quot;
                           </p>
-                          {plugin.isPremium && (
-                            <span className="mt-2 inline-block rounded bg-yellow-200 px-2 py-1 text-xs font-semibold text-yellow-700">
-                              Plus
-                            </span>
-                          )}
+                          <p className="mt-2 text-sm text-gray-400">
+                            Try a different query or category.
+                          </p>
                         </div>
-                      ))}
+                      )}
                     </div>
                     {/* Pagination Controls */}
-                    <div
-                      className={`mt-4 flex items-center ${
-                        isMobile ? 'justify-center' : 'justify-start'
-                      }`}
-                    >
-                      <button
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                        className="mr-4 rounded bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 disabled:opacity-50"
+                    {pageCount > 1 && (
+                      <div
+                        className={`flex items-center ${
+                          isMobile ? 'justify-center' : 'justify-start'
+                        }`}
                       >
-                        Previous
-                      </button>
-                      <span className="text-sm text-gray-300">
-                        Page {currentPage} of {pageCount}
-                      </span>
-                      <button
-                        onClick={handleNextPage}
-                        disabled={currentPage === pageCount}
-                        className="ml-4 rounded bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={currentPage === 1}
+                          className="mr-4 rounded bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-sm text-gray-300">
+                          Page {currentPage} of {pageCount}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage === pageCount}
+                          className="ml-4 rounded bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
