@@ -285,12 +285,12 @@ export const ChatInput = ({
   const isPhone = window.innerWidth <= 640;
 
   return (
-    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-hgpt-medium-gray dark:to-hgpt-medium-gray">
+    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-[#343541] dark:to-[#343541]">
       <div
         className={` ${
           enhancedMenuDisplayValue === 'none'
             ? 'mt-[1.5rem] md:mt-[3rem]'
-            : 'mt-[1.5rem] md:mt-[3rem]'
+            : `${'mt-[14rem] md:mt-[10rem]'}`
         } stretch mx-2 mb-4 mt-4 flex flex-row gap-3 transition-all ease-in-out md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-3xl`}
       >
         {messageIsStreaming && (
