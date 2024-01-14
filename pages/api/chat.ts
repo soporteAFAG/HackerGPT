@@ -42,7 +42,7 @@ enum ModelType {
 const getTokenLimit = (model: string) => {
   switch (model) {
     case ModelType.GPT35TurboInstruct:
-      return 7000;
+      return 6000;
     case ModelType.GPT4:
       return 12000;
     default:
@@ -210,7 +210,8 @@ const handler = async (req: Request): Promise<Response> => {
               model !== ModelType.GPT4 &&
               tool.toLowerCase() !== 'tools' &&
               tool.toLowerCase() !== 'subfinder' &&
-              tool.toLowerCase() !== 'alterx'
+              tool.toLowerCase() !== 'alterx' &&
+              tool.toLowerCase() !== 'gau'
             ) {
               const toolUrl = toolUrls[tool];
               return new Response(

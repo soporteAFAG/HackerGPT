@@ -94,10 +94,10 @@ export const availablePlugins: Plugin[] = [
     icon: 'https://avatars.githubusercontent.com/u/19563282',
     description:
       "Fetches known URLs from AlienVault's Open Threat Exchange, the Wayback Machine, Common Crawl, and URLScan.",
-    categories: ['Uncategorized'],
+    categories: ['Free'],
     githubRepoUrl: 'https://github.com/lc/gau',
     isInstalled: false,
-    isPremium: true,
+    isPremium: false,
   },
   {
     id: 7,
@@ -163,6 +163,7 @@ const PluginSelector = () => {
     if (
       toolId !== ToolID.SUBFINDER &&
       toolId !== ToolID.ALTERX &&
+      toolId !== ToolID.GAU &&
       toolId !== 'plugins_store' &&
       selectedConversation?.model.id !== OpenAIModelID.GPT_4
     ) {
