@@ -112,15 +112,15 @@ export const availablePlugins: Plugin[] = [
     isInstalled: false,
     isPremium: false,
   },
-  // {
-  //   id: 99,
-  //   name: 'Plugins Store',
-  //   selectorName: 'Plugins Store',
-  //   value: 'plugins_store',
-  //   categories: ['Uncategorized'],
-  //   isInstalled: false,
-  //   isPremium: false,
-  // },
+  {
+    id: 99,
+    name: 'Plugins Store',
+    selectorName: 'Plugins Store',
+    value: 'plugins_store',
+    categories: ['Uncategorized'],
+    isInstalled: false,
+    isPremium: false,
+  },
 ];
 
 function getPluginsPerPage() {

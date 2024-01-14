@@ -25,7 +25,7 @@ const PluginSelector = () => {
   const [isPluginStoreOpen, setIsPluginStoreOpen] = useState(false);
 
   const MAX_PLUGINS = 7;
-  const defaultPluginIds = [0];
+  const defaultPluginIds = [0, 99];
 
   useEffect(() => {
     if (selectedConversation?.model.id) {
