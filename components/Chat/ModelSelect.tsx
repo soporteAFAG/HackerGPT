@@ -1,11 +1,15 @@
 import { useState, useContext, useRef } from 'react';
-import { IconBrandOpenai } from '@tabler/icons-react';
+import { IconBrandOpenai, IconBuildingStore } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 
 import { RenderModuleBenefits } from '@/components/Chat/RenderModuleBenefits';
 import HomeContext from '@/pages/api/home/home.context';
 
 import { usePremiumStatusContext } from '@/hooks/PremiumStatusContext';
+import { usePluginContext } from '@/hooks/PluginProvider';
+
+import PluginStoreModal from '@/components/EnhancedMenu/PluginStore';
+import { availablePlugins } from '@/components/EnhancedMenu/PluginStore';
 
 export const ModelSelect = () => {
   const { t } = useTranslation('chat');
@@ -17,6 +21,10 @@ export const ModelSelect = () => {
   const { isPremium } = usePremiumStatusContext();
 
   const handleModuleClick = (modelName: string) => {
+    if (modelName === 'Plugins') {
+      setIsPluginModalOpen(true);
+      return;
+    }
     if (
       (modelName === 'GPT-4' || modelName === 'Web Browsing (GPT-4)') &&
       !isPremium
@@ -85,16 +93,61 @@ export const ModelSelect = () => {
     }, 300);
   };
 
+  const { state: pluginState, dispatch: pluginDispatch } = usePluginContext();
+  const [isPluginModalOpen, setIsPluginModalOpen] = useState(false);
+
   const [selectedModel, setSelectedModel] = useState<string | undefined>(
     selectedConversation?.model?.id || defaultModelId,
   );
 
+  const openPluginStore = () => {
+    setIsPluginModalOpen(true);
+  };
+
+  const MAX_PLUGINS = 7;
+
+  const installPlugin = (plugin: Plugin) => {
+    if (pluginState.installedPlugins.some((p) => p.id === (plugin as any).id)) {
+      alert('This plugin is already installed.');
+      return;
+    }
+
+    if (pluginState.installedPlugins.length >= MAX_PLUGINS) {
+      alert('You can only install up to ' + MAX_PLUGINS + ' plugins.');
+      return;
+    }
+
+    pluginDispatch({
+      type: 'INSTALL_PLUGIN',
+      payload: { ...(plugin as any), isInstalled: true },
+    });
+  };
+
+  const uninstallPlugin = (pluginId: number) => {
+    if (!pluginState.installedPlugins.some((p) => p.id === pluginId)) {
+      alert('This plugin is not installed.');
+      return;
+    }
+
+    pluginDispatch({
+      type: 'UNINSTALL_PLUGIN',
+      payload: pluginId,
+    });
+  };
+
+  // Update the availablePlugins array to include the isInstalled property
+  const updatedAvailablePlugins = availablePlugins.map((plugin) => {
+    const isInstalled = pluginState.installedPlugins.some(
+      (p) => p.id === plugin.id,
+    );
+    return { ...plugin, isInstalled };
+  });
+
   return (
-    <div className="relative flex flex-col items-stretch justify-center gap-2 sm:items-center">
-      <div className="relative flex rounded-xl bg-gray-100 p-1 text-hgpt-medium-gray dark:bg-hgpt-dark-gray">
+    <div className="relative flex flex-col items-stretch justify-center gap-0 sm:items-center">
+      <div className="flex rounded-xl bg-gray-100 p-1 text-hgpt-medium-gray dark:bg-hgpt-dark-gray">
         <ul className="flex w-full list-none gap-1 sm:w-auto">
           {models
-            .filter((model) => model.name !== 'Web Browsing (GPT-4)')
             .sort((a, b) => {
               if (a.name === 'HackerGPT') return -1;
               if (b.name === 'HackerGPT') return 1;
@@ -170,6 +223,22 @@ export const ModelSelect = () => {
             ))}
         </ul>
       </div>
+      <div className="mb-2 flex justify-center">
+        <button
+          type="button"
+          className="w-auto min-w-[150px] max-w-xs cursor-pointer rounded-b-xl bg-gray-100 text-gray-900 dark:bg-hgpt-dark-gray dark:text-gray-100"
+          onClick={openPluginStore}
+        >
+          <div className="flex items-center justify-center gap-1 py-2">
+            <IconBuildingStore size={20} className="pl-1" />
+
+            <span className="truncate pr-1.5 text-sm font-medium">
+              Plugin Store
+            </span>
+          </div>
+        </button>
+      </div>
+
       {showBenefits && (
         <div
           onMouseEnter={handleBenefitsEnter}
@@ -177,6 +246,15 @@ export const ModelSelect = () => {
         >
           <RenderModuleBenefits moduleName={hoveredModule} />
         </div>
+      )}
+      {isPluginModalOpen && (
+        <PluginStoreModal
+          isOpen={isPluginModalOpen}
+          setIsOpen={setIsPluginModalOpen}
+          pluginsData={updatedAvailablePlugins}
+          installPlugin={installPlugin}
+          uninstallPlugin={uninstallPlugin}
+        />
       )}
     </div>
   );

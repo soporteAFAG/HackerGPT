@@ -422,7 +422,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       <div className="hidden sm:block">
                         <HackerGPTSVG scale={0.45} />
                       </div>
-                      <div className="hidden text-3xl font-semibold text-[#0a0a0a] sm:block dark:text-[#fafafa]">
+                      <div className="hidden text-3xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] sm:block">
                         HackerGPT
                       </div>
                     </div>
@@ -432,7 +432,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             </>
           ) : (
             <>
-              <div className="sticky top-0 z-10 flex flex-1 flex-grow items-center justify-center gap-2 border border-b-neutral-300 bg-neutral-100 py-5 text-sm text-neutral-500 sm:justify-center dark:border-none dark:bg-hgpt-light-gray dark:text-neutral-200">
+              <div className="sticky top-0 z-10 flex flex-1 flex-grow items-center justify-center gap-2 border border-b-neutral-300 bg-neutral-100 py-5 text-sm text-neutral-500 dark:border-none dark:bg-hgpt-light-gray dark:text-neutral-200 sm:justify-center">
                 {model && (
                   <>
                     {model.name === 'HackerGPT' ? (

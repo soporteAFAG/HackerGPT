@@ -13,10 +13,6 @@ const useApiService = () => {
   const getModels = useCallback(() => {
     return Promise.resolve([
       {
-        id: 'gpt-3.5-turbo',
-        name: 'Web Browsing (GPT-4)',
-      },
-      {
         id: 'gpt-3.5-turbo-instruct',
         name: 'HackerGPT',
       },

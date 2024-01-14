@@ -268,7 +268,7 @@ export async function handleGauRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = "gau"
+  const toolId = 'gau';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {

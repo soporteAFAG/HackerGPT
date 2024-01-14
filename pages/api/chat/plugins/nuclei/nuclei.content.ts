@@ -854,7 +854,7 @@ export async function handleNucleiRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = "nuclei"
+  const toolId = 'nuclei';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {

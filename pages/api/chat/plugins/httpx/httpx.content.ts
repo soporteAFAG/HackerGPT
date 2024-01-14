@@ -768,7 +768,7 @@ export async function handleHttpxRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = "httpx"
+  const toolId = 'httpx';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {

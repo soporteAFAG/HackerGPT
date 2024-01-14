@@ -210,7 +210,7 @@ export async function handleAlterxRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = "alterx"
+  const toolId = 'alterx';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {

@@ -2,7 +2,7 @@ import React, { createContext, useReducer, useContext, useEffect } from 'react';
 
 import { Plugin } from '@/types/plugin';
 
-import { availablePlugins } from '@/components/EnhancedMenu/PluginSelector';
+import { availablePlugins } from '@/components/EnhancedMenu/PluginStore';
 
 enum ActionTypes {
   INSTALL_PLUGIN = 'INSTALL_PLUGIN',

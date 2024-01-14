@@ -8,119 +8,11 @@ import { usePremiumStatusContext } from '@/hooks/PremiumStatusContext';
 import HomeContext from '@/pages/api/home/home.context';
 
 import PluginStoreModal from './PluginStore';
+import { availablePlugins } from './PluginStore';
+
 import { usePluginContext } from '@/hooks/PluginProvider';
 
 import { Plugin } from '@/types/plugin';
-
-export const availablePlugins: Plugin[] = [
-  {
-    id: 0,
-    name: 'None',
-    selectorName: 'None',
-    value: 'none',
-    categories: ['Uncategorized'],
-    isInstalled: false,
-    isPremium: false,
-  },
-  {
-    id: 1,
-    name: 'Nuclei',
-    selectorName: 'Nuclei: Discover Vulnerabilities',
-    value: ToolID.NUCLEI,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description: 'Fast and customisable vulnerability scanner',
-    categories: ['New', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/nuclei',
-    isInstalled: false,
-    isPremium: true,
-  },
-  {
-    id: 2,
-    name: 'Subfinder',
-    selectorName: 'Subfinder: Discover Subdomains',
-    value: ToolID.SUBFINDER,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description:
-      'A robust discovery tool for passive enumeration on valid subdomains',
-    categories: ['Free', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/subfinder',
-    isInstalled: false,
-    isPremium: false,
-  },
-  {
-    id: 3,
-    name: 'Katana',
-    selectorName: 'Katana: Crawl Websites',
-    value: ToolID.KATANA,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description:
-      'A web crawling framework designed to navigate and parse for hidden details',
-    categories: ['New', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/katana',
-    isInstalled: false,
-    isPremium: true,
-  },
-  {
-    id: 4,
-    name: 'HttpX',
-    selectorName: 'HttpX: Web Analysis',
-    value: ToolID.HTTPX,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description:
-      'An HTTP toolkit that probes services, web servers, and other valuable metadata',
-    categories: ['New', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/httpx',
-    isInstalled: false,
-    isPremium: true,
-  },
-  {
-    id: 5,
-    name: 'Naabu',
-    selectorName: 'Naabu: Discover Ports',
-    value: ToolID.NAABU,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description:
-      'A fast port scanner designed to scan large networks at high speed',
-    categories: ['New', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/naabu',
-    isInstalled: false,
-    isPremium: true,
-  },
-  {
-    id: 6,
-    name: 'GAU',
-    selectorName: 'GAU: Url Enumeration',
-    value: ToolID.GAU,
-    icon: 'https://avatars.githubusercontent.com/u/19563282',
-    description:
-      "Fetches known URLs from AlienVault's Open Threat Exchange, the Wayback Machine, Common Crawl, and URLScan.",
-    categories: ['Free'],
-    githubRepoUrl: 'https://github.com/lc/gau',
-    isInstalled: false,
-    isPremium: false,
-  },
-  {
-    id: 7,
-    name: 'AlterX',
-    selectorName: 'AlterX: Subdomain Wordlist Generator',
-    value: ToolID.ALTERX,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description: 'Fast and customizable subdomain wordlist generator',
-    categories: ['Free'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/alterx',
-    isInstalled: false,
-    isPremium: false,
-  },
-  {
-    id: 99,
-    name: 'Plugins Store',
-    selectorName: 'Plugins Store',
-    value: 'plugins_store',
-    categories: ['Uncategorized'],
-    isInstalled: false,
-    isPremium: false,
-  },
-];
 
 const PluginSelector = () => {
   const { t } = useTranslation('tool');
@@ -133,7 +25,7 @@ const PluginSelector = () => {
   const [isPluginStoreOpen, setIsPluginStoreOpen] = useState(false);
 
   const MAX_PLUGINS = 7;
-  const defaultPluginIds = [0, 99];
+  const defaultPluginIds = [0];
 
   useEffect(() => {
     if (selectedConversation?.model.id) {

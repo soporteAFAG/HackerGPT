@@ -285,7 +285,7 @@ export const ChatInput = ({
   const isPhone = window.innerWidth <= 640;
 
   return (
-    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-[#343541] dark:to-[#343541]">
+    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 dark:border-white/20 dark:via-[#343541] dark:to-[#343541] md:pt-2">
       <div
         className={` ${
           enhancedMenuDisplayValue === 'none'
@@ -297,7 +297,7 @@ export const ChatInput = ({
           selectedConversation &&
           selectedConversation.messages.length > 0 && (
             <button
-              className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 md:mb-0 md:mt-2 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white"
+              className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white md:mb-0 md:mt-2"
               onClick={onRegenerate}
             >
               <IconRepeat size={16} /> {t('Regenerate response')}
@@ -307,8 +307,8 @@ export const ChatInput = ({
         <div
           className={`relative mx-2 flex w-full flex-grow flex-col rounded-md 
             border bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] 
-            sm:mx-4 dark:bg-[#40414F] 
-            dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] 
+            dark:bg-[#40414F] dark:text-white 
+            dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4 
             ${
               selectedToolId === null
                 ? 'border-black/10 dark:border-gray-900/50'
@@ -341,7 +341,7 @@ export const ChatInput = ({
             <textarea
               onFocus={() => setIsFocused(true)}
               ref={textareaRef}
-              className="m-0 w-full resize-none rounded-md bg-transparent p-0 py-3 pl-3 pr-8 text-black outline-none md:py-3 md:pl-3 dark:text-white"
+              className="m-0 w-full resize-none rounded-md bg-transparent p-0 py-3 pl-3 pr-8 text-black outline-none dark:text-white md:py-3 md:pl-3"
               style={{
                 resize: 'none',
                 bottom: `${textareaRef?.current?.scrollHeight}px`,
