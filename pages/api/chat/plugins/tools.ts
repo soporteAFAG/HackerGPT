@@ -163,7 +163,7 @@ export const handleCommand = async (
   );
 };
 
-export async function checkToolRateLimit(authToken: any) {
+export async function checkToolRateLimit(authToken: any, toolId: string) {
   try {
     const rateLimitResponse = await fetch(
       `${process.env.SECRET_TOOLS_RATELIMIT_FIREBASE_FUNCTION_URL}`,
@@ -173,6 +173,7 @@ export async function checkToolRateLimit(authToken: any) {
           Authorization: `${authToken}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ toolId }),
       },
     );
 

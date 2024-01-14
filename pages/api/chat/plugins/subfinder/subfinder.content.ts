@@ -289,7 +289,8 @@ export async function handleSubfinderRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const rateLimitCheck = await checkToolRateLimit(authToken);
+  const toolId = "subfinder"
+  const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {
     return rateLimitCheck.response;
