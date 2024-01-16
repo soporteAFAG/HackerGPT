@@ -15,6 +15,7 @@ export enum ToolID {
   GAU = 'gau',
   ALTERX = 'alterx',
   WEBSEARCH = 'websearch',
+  ENHANCEDSEARCH = 'enhancedsearch',
 }
 
 export enum ToolName {
@@ -26,6 +27,7 @@ export enum ToolName {
   GAU = 'gau',
   ALTERX = 'alterx',
   WEBSEARCH = 'websearch',
+  ENHANCEDSEARCH = 'enhancedsearch',
 }
 
 export const Tools: Record<ToolID, Tool> = {
@@ -67,6 +69,11 @@ export const Tools: Record<ToolID, Tool> = {
   [ToolID.WEBSEARCH]: {
     id: ToolID.WEBSEARCH,
     name: ToolName.WEBSEARCH,
+    requiredKeys: [],
+  },
+  [ToolID.ENHANCEDSEARCH]: {
+    id: ToolID.ENHANCEDSEARCH,
+    name: ToolName.ENHANCEDSEARCH,
     requiredKeys: [],
   },
 };

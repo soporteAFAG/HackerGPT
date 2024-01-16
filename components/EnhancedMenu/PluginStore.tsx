@@ -17,7 +17,7 @@ export const availablePlugins: Plugin[] = [
   {
     id: 0,
     name: 'None',
-    selectorName: 'No Plugin Selected',
+    selectorName: 'No plugin selected',
     value: 'none',
     categories: ['Uncategorized'],
     isInstalled: false,

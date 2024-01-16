@@ -1,27 +1,26 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePremiumStatusContext } from '@/hooks/PremiumStatusContext';
 
 import { ToolID } from '@/types/tool';
 import { OpenAIModelID } from '@/types/openai';
 
 import HomeContext from '@/pages/api/home/home.context';
 
-const SearchToggle = () => {
+const EnhancedSearchToggle = () => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const { t } = useTranslation('search');
+  const { t } = useTranslation('enhance search');
   const {
     state: { selectedToolId, selectedConversation },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
-  const { isPremium } = usePremiumStatusContext();
 
-  const SEARCH_TOOL_ID = ToolID.WEBSEARCH;
+  const WEB_SEARCH_TOOL_ID = ToolID.WEBSEARCH;
+  const ENHANCED_SEARCH_TOOL_ID = ToolID.ENHANCEDSEARCH;
 
   useEffect(() => {
     if (
-      selectedConversation?.model.id !== OpenAIModelID.GPT_4 &&
-      selectedToolId === SEARCH_TOOL_ID
+      selectedConversation?.model.id === OpenAIModelID.GPT_4 &&
+      selectedToolId === ENHANCED_SEARCH_TOOL_ID
     ) {
       setIsEnabled(false);
       homeDispatch({
@@ -35,9 +34,9 @@ const SearchToggle = () => {
     if (!selectedToolId && isEnabled) {
       homeDispatch({
         type: 'SET_SELECTED_TOOL_ID',
-        payload: SEARCH_TOOL_ID,
+        payload: ENHANCED_SEARCH_TOOL_ID,
       });
-    } else if (selectedToolId === SEARCH_TOOL_ID && !isEnabled) {
+    } else if (selectedToolId === ENHANCED_SEARCH_TOOL_ID && !isEnabled) {
       homeDispatch({
         type: 'SET_SELECTED_TOOL_ID',
         payload: null,
@@ -46,23 +45,11 @@ const SearchToggle = () => {
   }, [isEnabled, selectedToolId, homeDispatch]);
 
   const handleToggleChange = () => {
-    if (selectedToolId && selectedToolId !== SEARCH_TOOL_ID) {
+    if (selectedToolId && selectedToolId !== ENHANCED_SEARCH_TOOL_ID) {
       alert(
         t(
-          'Cannot enable "Search Web" feature while another plugin is selected.',
+          'Cannot enable "Enhance Search" feature while another plugin is selected.',
         ),
-      );
-      return;
-    }
-
-    if (!isPremium) {
-      alert(t('The "Search Web" feature is available only for Plus users.'));
-      return;
-    }
-
-    if (selectedConversation?.model.id !== OpenAIModelID.GPT_4) {
-      alert(
-        t('The "Search Web" feature is only available with the GPT-4 model.'),
       );
       return;
     }
@@ -73,7 +60,7 @@ const SearchToggle = () => {
   return (
     <div className="flex w-full flex-row items-center justify-between md:justify-start">
       <label className="mr-2 text-left text-sm text-neutral-700 dark:text-neutral-300">
-        {t('Search Web')}
+        {t('Enhance Search')}
       </label>
       <div className="relative">
         <input
@@ -99,4 +86,4 @@ const SearchToggle = () => {
   );
 };
 
-export default SearchToggle;
+export default EnhancedSearchToggle;

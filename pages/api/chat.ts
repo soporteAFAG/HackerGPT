@@ -58,6 +58,8 @@ const handler = async (req: Request): Promise<Response> => {
     let { messages, model, max_tokens, temperature, stream, toolId } =
       (await req.json()) as ChatBody;
 
+    let isEnhancedSearchActive = toolId === ToolID.ENHANCEDSEARCH;
+
     let answerMessage: Message = { role: 'user', content: '' };
 
     max_tokens = max_tokens || 1000;
@@ -255,6 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
           temperature,
           max_tokens,
           stream,
+          isEnhancedSearchActive
         );
       } else {
         streamResult = await OpenAIStream(

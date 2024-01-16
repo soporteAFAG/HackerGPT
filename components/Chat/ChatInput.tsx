@@ -310,7 +310,7 @@ export const ChatInput = ({
             dark:bg-[#40414F] dark:text-white 
             dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4 
             ${
-              selectedToolId === null
+              selectedToolId === null || selectedToolId === 'enhancedsearch'
                 ? 'border-black/10 dark:border-gray-900/50'
                 : 'border-blue-500 dark:border-blue-500'
             }

@@ -10,8 +10,10 @@ import HomeContext from '@/pages/api/home/home.context';
 
 import PluginSelector from './PluginSelector';
 import SearchToggle from './SearchWeb';
+import EnhancedSearchToggle from './EnhancedSearch';
 
 import PropTypes from 'prop-types';
+import { OpenAIModelID } from '@/types/openai';
 
 type EnhancedMenuProps = {
   isFocused: boolean;
@@ -21,7 +23,7 @@ type EnhancedMenuProps = {
 const EnhancedMenu = forwardRef<HTMLDivElement, EnhancedMenuProps>(
   ({ isFocused, setIsFocused }, ref) => {
     const {
-      state: { messageIsStreaming },
+      state: { messageIsStreaming, selectedConversation },
     } = useContext(HomeContext);
 
     const shouldShow = useMemo(() => {
@@ -60,8 +62,12 @@ const EnhancedMenu = forwardRef<HTMLDivElement, EnhancedMenuProps>(
         }}
       >
         <div className="relative flex w-full flex-col px-4 py-2">
-          <div className="mobile:!flex-col mb-2 flex w-full flex-row items-center justify-start gap-4 border-b pb-2 dark:border-gray-900/50">
-            <SearchToggle />
+          <div className="mobile:!flex-col mb-2 flex w-full flex-row items-center justify-start gap-4 border-b pb-2.5 dark:border-gray-900/50">
+            {selectedConversation?.model.id === OpenAIModelID.GPT_4 ? (
+              <SearchToggle />
+            ) : (
+              <EnhancedSearchToggle />
+            )}
           </div>
           <div className="flex w-full flex-col justify-between md:flex-row">
             <PluginSelector />

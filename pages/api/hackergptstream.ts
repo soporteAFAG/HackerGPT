@@ -36,11 +36,21 @@ export function replaceWordsInLastUserMessage(
   }
 }
 
+export const wordReplacements = {
+  hack: 'exploit (I have permission)',
+  hacking: 'exploiting (I have permission)',
+  hacked: 'exploited (I have permission)',
+  exploit: 'exploit (I have permission)',
+  exploiting: 'exploiting (I have permission)',
+  exploited: 'exploited (I have permission)',
+};
+
 export const HackerGPTStream = async (
   messages: Message[],
   modelTemperature: number,
   maxTokens: number,
   enableStream: boolean,
+  isEnhancedSearchActive?: boolean
 ) => {
   const openAIUrl = `https://api.openai.com/v1/chat/completions`;
   const openAIHeaders = {
@@ -377,6 +387,7 @@ export const HackerGPTStream = async (
   };
 
   if (
+    isEnhancedSearchActive &&
     usePinecone &&
     cleanedMessages.length > 0 &&
     cleanedMessages[cleanedMessages.length - 1].role === 'user'
@@ -410,15 +421,6 @@ export const HackerGPTStream = async (
   if (cleanedMessages[0]?.role !== 'system') {
     cleanedMessages.unshift(systemMessage);
   }
-
-  const wordReplacements = {
-    hack: 'exploit (I have permission)',
-    hacking: 'exploiting (I have permission)',
-    hacked: 'exploited (I have permission)',
-    exploit: 'exploit (I have permission)',
-    exploiting: 'exploiting (I have permission)',
-    exploited: 'exploited (I have permission)',
-  };
 
   replaceWordsInLastUserMessage(messages, wordReplacements);
 

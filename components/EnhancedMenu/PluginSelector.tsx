@@ -37,18 +37,32 @@ const PluginSelector = () => {
   }, [selectedConversation?.model.id, homeDispatch]);
 
   const toolOnChange = (toolId: string | null) => {
+    if (selectedToolId === ToolID.WEBSEARCH && toolId !== ToolID.WEBSEARCH) {
+      alert(
+        t(
+          'To select a different plugin, please first turn off the "Search Web" feature.',
+        ),
+      );
+      return;
+    }
+
+    if (
+      selectedToolId === ToolID.ENHANCEDSEARCH &&
+      toolId !== ToolID.ENHANCEDSEARCH
+    ) {
+      alert(
+        t(
+          'To select a different plugin, please first turn off the "Enhanced Search" feature.',
+        ),
+      );
+      return;
+    }
+
     if (toolId === 'none') {
       homeDispatch({
         type: 'SET_SELECTED_TOOL_ID',
         payload: null,
       });
-      return;
-    }
-
-    if (toolId === ToolID.WEBSEARCH) {
-      alert(
-        t('Please disable Search Web plugin before selecting another tool.'),
-      );
       return;
     }
 
@@ -59,7 +73,7 @@ const PluginSelector = () => {
       toolId !== 'plugins_store' &&
       selectedConversation?.model.id !== OpenAIModelID.GPT_4
     ) {
-      alert(t('This tool is only available with the GPT-4 model.'));
+      alert(t('This plugin is only available with the GPT-4 model.'));
       return;
     }
 
