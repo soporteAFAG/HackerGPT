@@ -5,20 +5,20 @@ const TermsAndConditions = () => {
     <div className="flex min-h-screen flex-col items-center justify-center bg-white p-10">
       <div className="container mx-auto max-w-2xl rounded-md border bg-white p-8 shadow-lg">
         <h1 className="mb-5 text-center text-3xl font-semibold">
-          HackerGPT, LLC Terms of Use
+          HackerGPT Terms of Use
         </h1>
 
         <div className="mt-4 text-lg leading-relaxed">
           <ul className="list-inside list-decimal">
             <li className="mb-3">
               <strong>Lawful Use:</strong> Users of products, services, or
-              software (&quot;Products&quot;) provided by HackerGPT, LLC
+              software (&quot;Products&quot;) provided by HackerAI LLC
               (&quot;the Company&quot;) agree to use the Products only for
               lawful purposes and in accordance with all applicable laws,
               regulations, and guidelines.
             </li>
             <li className="mb-3">
-              <strong>Limitation of Liability:</strong> Neither HackerGPT, LLC,
+              <strong>Limitation of Liability:</strong> Neither HackerAI LLC,
               nor its parent companies, affiliates, directors, officers,
               employees, agents, partners, or licensors shall be held
               responsible or liable, directly or indirectly, for any damages,
@@ -38,7 +38,7 @@ const TermsAndConditions = () => {
               <strong>User Responsibility and Indemnity:</strong> The user
               assumes full responsibility for any risks associated with their
               use of the Products. The user agrees to indemnify and hold
-              harmless HackerGPT, LLC, its parent companies, and their
+              harmless HackerAI LLC, its parent companies, and their
               respective officers, directors, employees, and agents from and
               against any claims, actions, or demands, including without
               limitation reasonable legal and accounting fees, arising or
@@ -48,7 +48,7 @@ const TermsAndConditions = () => {
               costs, and legal fees.
             </li>
             <li className="mb-3">
-              <strong>Changes to Terms of Use:</strong> HackerGPT, LLC reserves
+              <strong>Changes to Terms of Use:</strong> HackerAI LLC reserves
               the right to update or modify these Terms of Use at any time
               without prior notice. Your use of the Products after any such
               changes constitutes your acceptance of the new terms. It is your
@@ -63,7 +63,7 @@ const TermsAndConditions = () => {
               provision, and the other provisions of the Terms of Use remain in
               full force and effect.
             </li>
-            By using the Products provided by HackerGPT, LLC, you indicate your
+            By using the Products provided by HackerAI LLC, you indicate your
             understanding and agreement to abide by the terms and conditions set
             forth in these Terms of Use. If you do not agree with these terms,
             please refrain from using the Products.
