@@ -78,6 +78,9 @@ export const HackerGPTStream = async (
 
   let cleanedMessages = [];
   const MESSAGE_USAGE_CAP_WARNING = "Hold On! You've Hit Your Usage Cap.";
+  const MESSAGE_SIGN_IN_WARNING = 'Whoa, hold on a sec!';
+  const MESSAGE_TOOL_USAGE_CAP_WARNING = '⏰ You can use the tool again in';
+  const FREE_MESSAGES_WARNING = 'We apologize for any inconvenience, but';
 
   const usePinecone = process.env.USE_PINECONE === 'TRUE';
   const MIN_LAST_MESSAGE_LENGTH = parseInt(
@@ -115,7 +118,33 @@ export const HackerGPTStream = async (
         i++;
         continue;
       }
-    } else if (nextMessage.role === 'user' && message.role === 'user') {
+    } else if (
+      nextMessage.role === 'assistant' &&
+      nextMessage.content.includes(MESSAGE_SIGN_IN_WARNING)
+    ) {
+      if (message.role === 'user') {
+        i++;
+        continue;
+      }
+    } else if (
+      nextMessage.role === 'assistant' &&
+      nextMessage.content.includes(MESSAGE_TOOL_USAGE_CAP_WARNING)
+    ) {
+      if (message.role === 'user') {
+        i++;
+        continue;
+      }
+    } else if (
+      nextMessage.role === 'assistant' &&
+      nextMessage.content.includes(FREE_MESSAGES_WARNING)
+    ) {
+      if (message.role === 'user') {
+        i++;
+        continue;
+      }
+    }
+    // Skip consecutive user messages
+    else if (nextMessage.role === 'user' && message.role === 'user') {
       continue;
     } else {
       cleanedMessages.push(message);
@@ -127,6 +156,11 @@ export const HackerGPTStream = async (
     !messages[messages.length - 1].content.includes(
       MESSAGE_USAGE_CAP_WARNING,
     ) &&
+    !messages[messages.length - 1].content.includes(MESSAGE_SIGN_IN_WARNING) &&
+    !messages[messages.length - 1].content.includes(
+      MESSAGE_TOOL_USAGE_CAP_WARNING,
+    ) &&
+    !messages[messages.length - 1].content.includes(FREE_MESSAGES_WARNING) &&
     (cleanedMessages.length === 0 ||
       cleanedMessages[cleanedMessages.length - 1].role !== 'user')
   ) {
@@ -447,6 +481,7 @@ export const HackerGPTStream = async (
     temperature: modelTemperature,
   };
 
+  console.log(requestBody);
   try {
     const res = await fetch(openRouterUrl, {
       method: 'POST',
