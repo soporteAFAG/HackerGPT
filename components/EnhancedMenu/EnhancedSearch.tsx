@@ -7,42 +7,33 @@ import { OpenAIModelID } from '@/types/openai';
 import HomeContext from '@/pages/api/home/home.context';
 
 const EnhancedSearchToggle = () => {
-  const [isEnabled, setIsEnabled] = useState(false);
   const { t } = useTranslation('enhance search');
+  const [isEnabled, setIsEnabled] = useState(true);
   const {
     state: { selectedToolId, selectedConversation },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
-  const WEB_SEARCH_TOOL_ID = ToolID.WEBSEARCH;
   const ENHANCED_SEARCH_TOOL_ID = ToolID.ENHANCEDSEARCH;
 
   useEffect(() => {
-    if (
-      selectedConversation?.model.id === OpenAIModelID.GPT_4 &&
-      selectedToolId === ENHANCED_SEARCH_TOOL_ID
-    ) {
-      setIsEnabled(false);
-      homeDispatch({
-        type: 'SET_SELECTED_TOOL_ID',
-        payload: null,
-      });
+    if (isEnabled && selectedConversation?.model.id !== OpenAIModelID.GPT_4) {
+      if (selectedToolId !== ENHANCED_SEARCH_TOOL_ID) {
+        homeDispatch({
+          type: 'SET_SELECTED_TOOL_ID',
+          payload: ENHANCED_SEARCH_TOOL_ID,
+        });
+      }
+    } else {
+      if (selectedToolId === ENHANCED_SEARCH_TOOL_ID) {
+        homeDispatch({
+          type: 'SET_SELECTED_TOOL_ID',
+          payload: null,
+        });
+      }
     }
-  }, [selectedConversation?.model.id, selectedToolId, homeDispatch]);
+  }, [isEnabled, selectedToolId, selectedConversation, homeDispatch]);
 
-  useEffect(() => {
-    if (!selectedToolId && isEnabled) {
-      homeDispatch({
-        type: 'SET_SELECTED_TOOL_ID',
-        payload: ENHANCED_SEARCH_TOOL_ID,
-      });
-    } else if (selectedToolId === ENHANCED_SEARCH_TOOL_ID && !isEnabled) {
-      homeDispatch({
-        type: 'SET_SELECTED_TOOL_ID',
-        payload: null,
-      });
-    }
-  }, [isEnabled, selectedToolId, homeDispatch]);
 
   const handleToggleChange = () => {
     if (selectedToolId && selectedToolId !== ENHANCED_SEARCH_TOOL_ID) {
