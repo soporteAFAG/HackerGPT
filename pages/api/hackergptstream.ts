@@ -481,7 +481,6 @@ export const HackerGPTStream = async (
     temperature: modelTemperature,
   };
 
-  console.log(requestBody);
   try {
     const res = await fetch(openRouterUrl, {
       method: 'POST',
