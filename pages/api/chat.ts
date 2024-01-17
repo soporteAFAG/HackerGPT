@@ -257,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
           temperature,
           max_tokens,
           stream,
-          isEnhancedSearchActive
+          isEnhancedSearchActive,
         );
       } else {
         streamResult = await OpenAIStream(

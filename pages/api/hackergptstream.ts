@@ -8,6 +8,15 @@ import {
   createParser,
 } from 'eventsource-parser';
 
+class APIError extends Error {
+  code: any;
+  constructor(message: string | undefined, code: any) {
+    super(message);
+    this.name = 'APIError';
+    this.code = code;
+  }
+}
+
 export function replaceWordsInLastUserMessage(
   messages: string | any[],
   replacements: { [s: string]: unknown } | ArrayLike<unknown>,
@@ -50,20 +59,22 @@ export const HackerGPTStream = async (
   modelTemperature: number,
   maxTokens: number,
   enableStream: boolean,
-  isEnhancedSearchActive?: boolean
+  isEnhancedSearchActive?: boolean,
 ) => {
-  const openAIUrl = `https://api.openai.com/v1/chat/completions`;
-  const openAIHeaders = {
-    Authorization: `Bearer ${process.env.SECRET_OPENAI_API_KEY}`,
-    'Content-Type': 'application/json',
-  };
+  // const openAIUrl = `https://api.openai.com/v1/chat/completions`;
+  // const openAIHeaders = {
+  //   Authorization: `Bearer ${process.env.SECRET_OPENAI_API_KEY}`,
+  //   'Content-Type': 'application/json',
+  // };
   const openRouterUrl = `https://openrouter.ai/api/v1/chat/completions`;
   const openRouterHeaders = {
     Authorization: `Bearer ${process.env.SECRET_OPENROUTER_API_KEY}`,
-    'HTTP-Referer': 'https://www.hackergpt.chat',
+    'HTTP-Referer': 'https://www.hackergpt.co',
     'X-Title': 'HackerGPT',
     'Content-Type': 'application/json',
   };
+
+  const HACKERGPT_SYSTEM_PROMPT = process.env.SECRET_HACKERGPT_SYSTEM_PROMPT;
 
   let cleanedMessages = [];
   const MESSAGE_USAGE_CAP_WARNING = "Hold On! You've Hit Your Usage Cap.";
@@ -201,7 +212,7 @@ export const HackerGPTStream = async (
 
   let systemMessage: Message = {
     role: 'system',
-    content: `${process.env.SECRET_OPENAI_SYSTEM_PROMPT}`,
+    content: `${HACKERGPT_SYSTEM_PROMPT}`,
   };
 
   const translateToEnglish = async (text: any) => {
@@ -411,7 +422,7 @@ export const HackerGPTStream = async (
         modelTemperature = pineconeTemperature;
 
         systemMessage.content =
-          `${process.env.SECRET_OPENAI_SYSTEM_PROMPT} ` +
+          `${HACKERGPT_SYSTEM_PROMPT} ` +
           `${process.env.SECRET_PINECONE_SYSTEM_PROMPT} ` +
           `Context:\n ${pineconeResults}`;
       }
@@ -425,82 +436,98 @@ export const HackerGPTStream = async (
   replaceWordsInLastUserMessage(messages, wordReplacements);
 
   const requestBody = {
-    model: `${process.env.SECRET_HACKERGPT_MODEL}`,
+    model: `${process.env.SECRET_HACKERGPT_OPENROUTER_MODEL}`,
+    route: 'fallback',
     messages: cleanedMessages.map((msg) => ({
       role: msg.role,
       content: msg.content,
     })),
     max_tokens: maxTokens,
-    n: 1,
     stream: enableStream,
     temperature: modelTemperature,
   };
 
-  const res = await fetch(openAIUrl, {
-    method: 'POST',
-    headers: openAIHeaders,
-    body: JSON.stringify(requestBody),
-  });
+  try {
+    const res = await fetch(openRouterUrl, {
+      method: 'POST',
+      headers: openRouterHeaders,
+      body: JSON.stringify(requestBody),
+    });
 
-  if (res.status !== 200) {
-    const result = await res.json();
-    if (result.error) {
-      throw new OpenAIError(
-        result.error.message,
-        result.error.type,
-        result.error.param,
-        result.error.code,
-      );
-    } else {
-      throw new Error(`OpenAI API returned an error: ${result.statusText}`);
+    if (!res.ok) {
+      const result = await res.json();
+      let errorMessage = result.error?.message || 'An unknown error occurred';
+
+      switch (res.status) {
+        case 400:
+          throw new APIError(`Bad Request: ${errorMessage}`, 400);
+        case 401:
+          throw new APIError(`Invalid Credentials: ${errorMessage}`, 401);
+        case 402:
+          throw new APIError(`Out of Credits: ${errorMessage}`, 402);
+        case 403:
+          throw new APIError(`Moderation Required: ${errorMessage}`, 403);
+        case 408:
+          throw new APIError(`Request Timeout: ${errorMessage}`, 408);
+        case 429:
+          throw new APIError(`Rate Limited: ${errorMessage}`, 429);
+        case 502:
+          throw new APIError(`Service Unavailable: ${errorMessage}`, 502);
+        default:
+          throw new APIError(`HTTP Error: ${errorMessage}`, res.status);
+      }
     }
-  }
 
-  if (!enableStream) {
-    const data = await res.json();
-    const messages = data.choices.map(
-      (choice: { message: { content: any } }) => choice.message.content,
-    );
-    return messages.join('\n');
-  }
+    if (!res.body) {
+      throw new Error('Response body is null');
+    }
 
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  const streamResult = new ReadableStream({
-    async start(controller) {
-      const onParse = (event: ParsedEvent | ReconnectInterval) => {
-        if (event.type === 'event') {
-          const data = event.data;
-          if (data !== '[DONE]') {
-            try {
-              const json = JSON.parse(data);
-              if (json.choices[0].finish_reason != null) {
-                controller.close();
-                return;
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+        const parser = createParser(
+          (event: ParsedEvent | ReconnectInterval) => {
+            if ('data' in event) {
+              const data = event.data;
+              if (data !== '[DONE]') {
+                try {
+                  const json = JSON.parse(data);
+                  if (json.choices && json.choices[0].finish_reason != null) {
+                    controller.close();
+                    return;
+                  }
+                  const text = json.choices[0].delta.content;
+                  const queue = encoder.encode(text);
+                  controller.enqueue(queue);
+                } catch (e) {
+                  controller.error(`Failed to parse event data: ${e}`);
+                }
               }
-              const text = json.choices[0].delta.content;
-              const queue = encoder.encode(text);
-              controller.enqueue(queue);
-            } catch (e) {
-              controller.error(e);
             }
+          },
+        );
+
+        for await (const chunk of res.body as any) {
+          const content = decoder.decode(chunk);
+          parser.feed(content);
+          if (content.trim().endsWith('data: [DONE]')) {
+            controller.close();
           }
         }
-      };
+      },
+    });
 
-      const parser = createParser(onParse);
-
-      for await (const chunk of res.body as any) {
-        const content = decoder.decode(chunk);
-        if (content.trim() === 'data: [DONE]') {
-          controller.close();
-        } else {
-          parser.feed(content);
-        }
-      }
-    },
-  });
-
-  return streamResult;
+    return stream;
+  } catch (error) {
+    if (error instanceof APIError) {
+      console.error(
+        `API Error - Code: ${error.code}, Message: ${error.message}`,
+      );
+    } else if (error instanceof Error) {
+      console.error(`Unexpected Error: ${error.message}`);
+    } else {
+      console.error(`An unknown error occurred: ${error}`);
+    }
+  }
 };
