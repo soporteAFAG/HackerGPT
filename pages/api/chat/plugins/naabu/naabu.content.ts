@@ -209,7 +209,7 @@ const parseNaabuCommandLine = (input: string): NaabuParams => {
       case '-host-discovery':
         params.hostDiscovery = true;
         break;
-      case '-Pn':
+      case '-pn':
       case '-skip-host-discovery':
         params.skipHostDiscovery = true;
         break;
