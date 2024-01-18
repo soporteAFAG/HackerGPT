@@ -110,7 +110,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
     return params;
   }
 
-  const trimmedInput = input.trim();
+  const trimmedInput = input.trim().toLowerCase();
   const args = trimmedInput.split(' ');
   args.shift();
 

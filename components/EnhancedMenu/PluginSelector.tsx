@@ -48,7 +48,8 @@ const PluginSelector = () => {
 
     if (
       selectedToolId === ToolID.ENHANCEDSEARCH &&
-      toolId !== ToolID.ENHANCEDSEARCH
+      toolId !== ToolID.ENHANCEDSEARCH && 
+      toolId !== "plugins_store"
     ) {
       alert(
         t(
