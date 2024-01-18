@@ -360,8 +360,8 @@ export async function handleGauRequest(
           });
         }
 
-        if (gauData.length > 50000) {
-          gauData = gauData.slice(0, 50000);
+        if (gauData.length > 25000) {
+          gauData = gauData.slice(0, 25000);
         }
 
         clearInterval(intervalId);
