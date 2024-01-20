@@ -34,7 +34,6 @@ const EnhancedSearchToggle = () => {
     }
   }, [isEnabled, selectedToolId, selectedConversation, homeDispatch]);
 
-
   const handleToggleChange = () => {
     if (selectedToolId && selectedToolId !== ENHANCED_SEARCH_TOOL_ID) {
       alert(

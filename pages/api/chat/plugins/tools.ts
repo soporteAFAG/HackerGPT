@@ -4,31 +4,14 @@ import { OpenAIStream } from '@/pages/api/openaistream';
 import {
   isSubfinderCommand,
   handleSubfinderRequest,
-} from '@/pages/api/chat/plugins/subfinder/subfinder.content';
-import {
-  isAlterxCommand,
-  handleAlterxRequest,
-} from '@/pages/api/chat/plugins/alterx/alterx.content';
-import {
-  isGauCommand,
-  handleGauRequest,
-} from '@/pages/api/chat/plugins/gau/gau.content';
-import {
-  isKatanaCommand,
-  handleKatanaRequest,
-} from '@/pages/api/chat/plugins/katana/katana.content';
-import {
-  isNaabuCommand,
-  handleNaabuRequest,
-} from '@/pages/api/chat/plugins/naabu/naabu.content';
-import {
-  isHttpxCommand,
-  handleHttpxRequest,
-} from '@/pages/api/chat/plugins/httpx/httpx.content';
-import {
-  isNucleiCommand,
-  handleNucleiRequest,
-} from '@/pages/api/chat/plugins/nuclei/nuclei.content';
+} from './subfinder/subfinder.content';
+import { isAlterxCommand, handleAlterxRequest } from './alterx/alterx.content';
+import { isGauCommand, handleGauRequest } from './gau/gau.content';
+import { isKatanaCommand, handleKatanaRequest } from './katana/katana.content';
+import { isNaabuCommand, handleNaabuRequest } from './naabu/naabu.content';
+import { isHttpxCommand, handleHttpxRequest } from './httpx/httpx.content';
+import { isNucleiCommand, handleNucleiRequest } from './nuclei/nuclei.content';
+import { handleCyberChefRequest } from './cyberchef/cyberchef.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
@@ -81,6 +64,7 @@ export const displayToolsHelpGuide = (toolUrls: {
 };
 
 const commandHandlers: CommandHandler = {
+  handleCyberChefRequest,
   isNucleiCommand,
   handleNucleiRequest,
   isSubfinderCommand,
@@ -126,6 +110,7 @@ type ToolIdToHandlerMapping = {
 };
 
 export const toolIdToHandlerMapping: ToolIdToHandlerMapping = {
+  cyberchef: handleCyberChefRequest,
   nuclei: handleNucleiRequest,
   subfinder: handleSubfinderRequest,
   katana: handleKatanaRequest,

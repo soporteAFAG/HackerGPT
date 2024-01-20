@@ -48,8 +48,8 @@ const PluginSelector = () => {
 
     if (
       selectedToolId === ToolID.ENHANCEDSEARCH &&
-      toolId !== ToolID.ENHANCEDSEARCH && 
-      toolId !== "plugins_store"
+      toolId !== ToolID.ENHANCEDSEARCH &&
+      toolId !== 'plugins_store'
     ) {
       alert(
         t(
@@ -71,6 +71,7 @@ const PluginSelector = () => {
       toolId !== ToolID.SUBFINDER &&
       toolId !== ToolID.ALTERX &&
       toolId !== ToolID.GAU &&
+      toolId !== ToolID.CYBERCHEF &&
       toolId !== 'plugins_store' &&
       selectedConversation?.model.id !== OpenAIModelID.GPT_4
     ) {

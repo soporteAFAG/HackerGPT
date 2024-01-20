@@ -29,11 +29,13 @@ export const OpenAIStream = async (
   messages: Message[],
   answerMessage: Message,
   toolId?: string | null | undefined,
+  tools?: any,
 ) => {
   const SYSTEM_PROMPT = process.env.SECRET_OPENAI_SYSTEM_PROMPT;
   const GOOGLE_SEARCH_SYSTEM_PROMPT =
     process.env.SECRET_OPENAI_GOOGLE_SEARCH_SYSTEM_PROMPT;
   const OPENAI_API_KEY = process.env.SECRET_OPENAI_API_KEY;
+  const HACKERGPT_MODEL = process.env.SECRET_HACKERGPT_MODEL;
 
   const openAIUrl = `https://api.openai.com/v1/chat/completions`;
 
@@ -60,6 +62,9 @@ export const OpenAIStream = async (
     max_tokens: 1000,
     temperature: 0.4,
     stream: true,
+    ...(tools && Object.keys(tools).length > 0
+      ? { tools: tools, tool_choice: 'auto' }
+      : {}),
   };
 
   if (toolId === ToolID.WEBSEARCH) {
@@ -75,8 +80,13 @@ export const OpenAIStream = async (
     if (answerMessage.content.trim()) {
       commonBody['messages'].push(answerMessage);
     }
+  } else if (tools && Object.keys(tools).length > 0) {
+    commonBody.model = `gpt-4-1106-preview`;
+    if (answerMessage.content.trim()) {
+      commonBody['messages'].push(answerMessage);
+    }
   } else if (model === 'gpt-3.5-turbo-instruct') {
-    commonBody.model = `${process.env.SECRET_HACKERGPT_MODEL}`;
+    commonBody.model = `${HACKERGPT_MODEL}`;
     if (answerMessage.content.trim()) {
       commonBody['messages'].push(answerMessage);
     }
@@ -121,7 +131,20 @@ export const OpenAIStream = async (
                 controller.close();
                 return;
               }
-              const text = json.choices[0].delta.content;
+
+              let text = json.choices[0].delta.content;
+
+              if (
+                tools &&
+                Object.keys(tools).length > 0 &&
+                json.choices[0].delta.tool_calls &&
+                json.choices[0].delta.tool_calls.length > 0
+              ) {
+                const toolCallArguments =
+                  json.choices[0].delta.tool_calls[0].function.arguments;
+                text = toolCallArguments;
+              }
+
               const queue = encoder.encode(text);
               controller.enqueue(queue);
             } catch (e) {

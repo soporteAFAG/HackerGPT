@@ -25,6 +25,19 @@ export const availablePlugins: Plugin[] = [
   },
   {
     id: 1,
+    name: 'CyberChef',
+    selectorName: 'CyberChef: Data Manipulation',
+    value: ToolID.CYBERCHEF,
+    icon: 'https://gchq.github.io/CyberChef/images/cyberchef-128x128.png',
+    description:
+      'A tool for for encryption, encoding, compression, and data analysis.',
+    categories: ['Free', 'Popular'],
+    githubRepoUrl: 'https://github.com/gchq/CyberChef',
+    isInstalled: false,
+    isPremium: false,
+  },
+  {
+    id: 2,
     name: 'Nuclei',
     selectorName: 'Nuclei: Discover Vulnerabilities',
     value: ToolID.NUCLEI,
@@ -36,7 +49,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 2,
+    id: 3,
     name: 'Subfinder',
     selectorName: 'Subfinder: Discover Subdomains',
     value: ToolID.SUBFINDER,
@@ -49,7 +62,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: false,
   },
   {
-    id: 3,
+    id: 4,
     name: 'Katana',
     selectorName: 'Katana: Crawl Websites',
     value: ToolID.KATANA,
@@ -62,7 +75,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 4,
+    id: 5,
     name: 'HttpX',
     selectorName: 'HttpX: Web Analysis',
     value: ToolID.HTTPX,
@@ -75,7 +88,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 5,
+    id: 6,
     name: 'Naabu',
     selectorName: 'Naabu: Discover Ports',
     value: ToolID.NAABU,
@@ -88,7 +101,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 6,
+    id: 7,
     name: 'GAU',
     selectorName: 'GAU: Url Enumeration',
     value: ToolID.GAU,
@@ -101,7 +114,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: false,
   },
   {
-    id: 7,
+    id: 8,
     name: 'AlterX',
     selectorName: 'AlterX: Subdomain Wordlist Generator',
     value: ToolID.ALTERX,

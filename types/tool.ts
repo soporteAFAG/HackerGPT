@@ -7,6 +7,7 @@ export interface Tool {
 }
 
 export enum ToolID {
+  CYBERCHEF = 'cyberchef',
   NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
@@ -19,6 +20,7 @@ export enum ToolID {
 }
 
 export enum ToolName {
+  CYBERCHEF = 'cyberchef',
   NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
@@ -31,6 +33,11 @@ export enum ToolName {
 }
 
 export const Tools: Record<ToolID, Tool> = {
+  [ToolID.CYBERCHEF]: {
+    id: ToolID.CYBERCHEF,
+    name: ToolName.CYBERCHEF,
+    requiredKeys: [],
+  },
   [ToolID.NUCLEI]: {
     id: ToolID.NUCLEI,
     name: ToolName.NUCLEI,
