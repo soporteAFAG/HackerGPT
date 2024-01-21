@@ -38,14 +38,14 @@ const TermsAndConditions = () => {
               <strong>User Responsibility and Indemnity:</strong> The user
               assumes full responsibility for any risks associated with their
               use of the Products. The user agrees to indemnify and hold
-              harmless HackerAI LLC, its parent companies, and their
-              respective officers, directors, employees, and agents from and
-              against any claims, actions, or demands, including without
-              limitation reasonable legal and accounting fees, arising or
-              resulting from their use of the Products or their breach of these
-              Terms of Use. This indemnity includes any liability or expense
-              arising from claims, losses, damages, judgments, fines, litigation
-              costs, and legal fees.
+              harmless HackerAI LLC, its parent companies, and their respective
+              officers, directors, employees, and agents from and against any
+              claims, actions, or demands, including without limitation
+              reasonable legal and accounting fees, arising or resulting from
+              their use of the Products or their breach of these Terms of Use.
+              This indemnity includes any liability or expense arising from
+              claims, losses, damages, judgments, fines, litigation costs, and
+              legal fees.
             </li>
             <li className="mb-3">
               <strong>Changes to Terms of Use:</strong> HackerAI LLC reserves

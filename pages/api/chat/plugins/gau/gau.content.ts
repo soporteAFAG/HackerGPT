@@ -79,7 +79,7 @@ const parseGauCommandLine = (input: string): GauParams => {
   }
 
   const trimmedInput = input.trim().toLowerCase();
-  console.log(trimmedInput)
+  console.log(trimmedInput);
   const args = trimmedInput.split(' ');
   args.shift();
 

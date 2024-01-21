@@ -296,10 +296,22 @@ export async function handleCyberChefRequest(
         const cyberchefResponse = await fetch(cyberchefUrl, {
           method: 'POST',
           headers: {
+            Authorization: `${process.env.SECRET_AUTH_CYBERCHEF}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
         });
+
+        if (cyberchefResponse.status === 403) {
+          const forbiddenMessage =
+            'Access forbidden: received 403 response from CyberChef server.';
+          sendMessage(forbiddenMessage, true);
+          controller.close();
+          return new Response(forbiddenMessage, {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
 
         const jsonResponse = await cyberchefResponse.json();
 
