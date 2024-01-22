@@ -80,7 +80,10 @@ export const OpenAIStream = async (
     if (answerMessage.content.trim()) {
       commonBody['messages'].push(answerMessage);
     }
-  } else if (tools && Object.keys(tools).length > 0) {
+  } else if (
+    (tools && Object.keys(tools).length > 0) ||
+    (toolId && toolId.length > 0)
+  ) {
     commonBody.model = `gpt-4-1106-preview`;
     if (answerMessage.content.trim()) {
       commonBody['messages'].push(answerMessage);

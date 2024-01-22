@@ -131,6 +131,7 @@ export async function handleAlterxRequest(
       model: string,
       messages: Message[],
       answerMessage: Message,
+      toolId: string,
     ): Promise<ReadableStream<any>>;
     (arg0: any, arg1: any, arg2: any): any;
   },
@@ -147,6 +148,7 @@ export async function handleAlterxRequest(
     });
   }
 
+  const toolId = 'alterx';
   let aiResponse = '';
 
   if (invokedByToolId) {
@@ -157,6 +159,7 @@ export async function handleAlterxRequest(
       model,
       messagesToSend,
       answerMessage,
+      toolId,
     );
 
     const reader = openAIResponseStream.getReader();
@@ -210,7 +213,6 @@ export async function handleAlterxRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = 'alterx';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {

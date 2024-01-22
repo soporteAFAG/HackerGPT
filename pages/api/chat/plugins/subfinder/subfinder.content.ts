@@ -209,6 +209,7 @@ export async function handleSubfinderRequest(
       model: string,
       messages: Message[],
       answerMessage: Message,
+      toolId: string,
     ): Promise<ReadableStream<any>>;
     (arg0: any, arg1: any, arg2: any): any;
   },
@@ -225,6 +226,7 @@ export async function handleSubfinderRequest(
     });
   }
 
+  const toolId = 'subfinder';
   let aiResponse = '';
 
   if (invokedByToolId) {
@@ -235,6 +237,7 @@ export async function handleSubfinderRequest(
       model,
       messagesToSend,
       answerMessage,
+      toolId,
     );
 
     const reader = openAIResponseStream.getReader();
@@ -289,7 +292,6 @@ export async function handleSubfinderRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  const toolId = 'subfinder';
   const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
   if (rateLimitCheck.isRateLimited) {
