@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/react';
 
 import { HomeProvider } from '@/pages/api/home/home.context';
 import { PluginProvider } from '@/hooks/PluginProvider';
@@ -27,7 +26,6 @@ function App({ Component, pageProps }: AppProps<{}>) {
             </PluginProvider>
           </PremiumStatusProvider>
         </HomeProvider>
-        <Analytics />
       </QueryClientProvider>
     </div>
   );

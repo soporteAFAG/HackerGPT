@@ -15,7 +15,11 @@ const firebaseConfig = {
 
 let app: firebase.app.App;
 
-if (!firebase.apps.length) {
+if (typeof window !== 'undefined' && !firebase.apps.length) {
+  app = firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  firebase.performance();
+} else if (!firebase.apps.length) {
   app = firebase.initializeApp(firebaseConfig);
 } else {
   app = firebase.app();
