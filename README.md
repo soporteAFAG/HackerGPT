@@ -4,9 +4,9 @@ HackerGPT is your indispensable digital companion in the world of hacking. Craft
 
 ## How does HackerGPT work?
 
-When you ask a question, it's sent to our server. We verify user authenticity and manage your question quota based on whether you're a free or plus user. We then search our database for information that closely matches your question. For questions not in English, we translate them to find relevant information from our database. If a strong match is found, it's incorporated into the AI's response process. Your question is then securely passed to OpenAI for processing, with no personal information sent. Responses vary based on the module:
+When you ask a question, it's sent to our server. We verify user authenticity and manage your question quota based on whether you're a free or plus user. We then search our database for information that closely matches your question. For questions not in English, we translate them to find relevant information from our database. If a strong match is found, it's incorporated into the AI's response process. Your question is then securely passed to OpenAI or OpenRouter for processing, with no personal information sent. Responses vary based on the module:
 
-- **HackerGPT**: A tuned version of gpt-3.5-turbo-1106 with semantic search on our data.
+- **HackerGPT**: A tuned version of Mixtral 8x7B with semantic search on our data.
 - **GPT-4 Turbo**: The latest and greatest from OpenAI, paired with our unique prompt.
 
 ## What Makes HackerGPT Special?
@@ -42,8 +42,8 @@ npm i
 Initialize your environment settings by creating a `.env.local` file in the project's root directory. Simply duplicate the `.env.local.example` file, rename it to `.env.local`, and then update the values with your specific configurations. For HackerGPT usage, you'll need to modify the following entries:
 
 ```bash
-SECRET_OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-SECRET_OPENAI_SYSTEM_PROMPT=YOUR_SYSTEM_PROMPT
+SECRET_OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
+SECRET_HACKERGPT_SYSTEM_PROMPT=YOUR_HACKERGPT_SYSTEM_PROMPT
 ```
 
 **4. Run App**
