@@ -25,31 +25,6 @@ export const availablePlugins: Plugin[] = [
   },
   {
     id: 1,
-    name: 'CyberChef',
-    selectorName: 'CyberChef: Data Manipulation',
-    value: ToolID.CYBERCHEF,
-    icon: 'https://gchq.github.io/CyberChef/images/cyberchef-128x128.png',
-    description:
-      'A tool for for encryption, encoding, compression, and data analysis.',
-    categories: ['Free', 'Popular'],
-    githubRepoUrl: 'https://github.com/gchq/CyberChef',
-    isInstalled: false,
-    isPremium: false,
-  },
-  {
-    id: 2,
-    name: 'Nuclei',
-    selectorName: 'Nuclei: Discover Vulnerabilities',
-    value: ToolID.NUCLEI,
-    icon: 'https://avatars.githubusercontent.com/u/50994705',
-    description: 'Fast and customisable vulnerability scanner',
-    categories: ['New', 'Popular'],
-    githubRepoUrl: 'https://github.com/projectdiscovery/nuclei',
-    isInstalled: false,
-    isPremium: true,
-  },
-  {
-    id: 3,
     name: 'Subfinder',
     selectorName: 'Subfinder: Discover Subdomains',
     value: ToolID.SUBFINDER,
@@ -60,6 +35,31 @@ export const availablePlugins: Plugin[] = [
     githubRepoUrl: 'https://github.com/projectdiscovery/subfinder',
     isInstalled: false,
     isPremium: false,
+  },
+  {
+    id: 2,
+    name: 'CyberChef',
+    selectorName: 'CyberChef: Data Manipulation',
+    value: ToolID.CYBERCHEF,
+    icon: 'https://gchq.github.io/CyberChef/images/cyberchef-128x128.png',
+    description:
+      'A tool for for encryption, encoding, compression, and data analysis.',
+    categories: ['Free', 'Popular', 'New'],
+    githubRepoUrl: 'https://github.com/gchq/CyberChef',
+    isInstalled: false,
+    isPremium: false,
+  },
+  {
+    id: 3,
+    name: 'Nuclei',
+    selectorName: 'Nuclei: Discover Vulnerabilities',
+    value: ToolID.NUCLEI,
+    icon: 'https://avatars.githubusercontent.com/u/50994705',
+    description: 'Fast and customisable vulnerability scanner',
+    categories: ['New', 'Popular'],
+    githubRepoUrl: 'https://github.com/projectdiscovery/nuclei',
+    isInstalled: false,
+    isPremium: true,
   },
   {
     id: 4,
@@ -186,6 +186,17 @@ function PluginStoreModal({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const [noPluginsMessage, setNoPluginsMessage] = useState('');
+
+  // Update this state whenever the selectedCategory or searchTerm changes
+  useEffect(() => {
+    if (selectedCategory === 'Installed' && searchTerm === '') {
+      setNoPluginsMessage('No plugins installed');
+    } else {
+      setNoPluginsMessage(`No plugins found for "${searchTerm}"`);
+    }
+  }, [selectedCategory, searchTerm]);
 
   const excludedPluginIds = [0, 99];
 
@@ -402,11 +413,13 @@ function PluginStoreModal({
                       ) : (
                         <div className="col-span-full flex flex-col items-center justify-center p-10">
                           <p className="text-lg font-semibold text-white">
-                            No plugins found for &quot;{searchTerm}&quot;
+                            {noPluginsMessage}
                           </p>
-                          <p className="mt-2 text-sm text-gray-400">
-                            Try a different query or category.
-                          </p>
+                          {selectedCategory !== 'Installed' && (
+                            <p className="mt-2 text-sm text-gray-400">
+                              Try a different query or category.
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
