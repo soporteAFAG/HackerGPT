@@ -51,7 +51,7 @@ export const OpenAIStream = async (
   replaceWordsInLastUserMessage(messages, wordReplacements);
 
   const commonBody = {
-    model: `gpt-4-1106-preview`,
+    model: `gpt-4-turbo-preview`,
     messages: [
       {
         role: 'system',
@@ -84,7 +84,7 @@ export const OpenAIStream = async (
     (tools && Object.keys(tools).length > 0) ||
     (toolId && toolId.length > 0)
   ) {
-    commonBody.model = `gpt-4-1106-preview`;
+    commonBody.model = `gpt-4-turbo-preview`;
     if (answerMessage.content.trim()) {
       commonBody['messages'].push(answerMessage);
     }
