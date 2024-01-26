@@ -184,7 +184,7 @@ export const HackerGPTStream = async (
     const PINECONE_QUERY_URL = `https://${process.env.SECRET_PINECONE_INDEX}-${process.env.SECRET_PINECONE_PROJECT_ID}.svc.${process.env.SECRET_PINECONE_ENVIRONMENT}.pinecone.io/query`;
 
     const requestBody = {
-      topK: 3,
+      topK: 5,
       vector: queryEmbedding,
       includeMetadata: true,
       namespace: `${process.env.SECRET_PINECONE_NAMESPACE}`,
@@ -213,7 +213,7 @@ export const HackerGPTStream = async (
       }
 
       const filteredMatches = matches.filter(
-        (match: { score: number }) => match.score > 0.8,
+        (match: { score: number }) => match.score > 0.82,
       );
 
       if (filteredMatches.length > 0) {
@@ -431,35 +431,102 @@ export const HackerGPTStream = async (
     return relevantWordCount / words.length >= threshold / 100;
   };
 
+  function extractAssistantSnippet(message: string, length: number) {
+    // Identify key sentences or phrases in the assistant's message
+    // For simplicity, we're still using a quarter way through for now
+    const startOffset = Math.floor(message.length * 0.25);
+    const endOffset = startOffset + length;
+    return message.substring(startOffset, Math.min(endOffset, message.length));
+  }
+
+  function findNaturalBreakpoint(message: string | string[], maxLength: any) {
+    // Find a natural breakpoint like the end of a sentence
+    let breakpoint = message.lastIndexOf('. ', maxLength);
+    return breakpoint === -1 ? maxLength : breakpoint + 1;
+  }
+
+  function isMessageRelevant(message: string | any[], keywords: any[]) {
+    // Basic keyword matching for relevance - can be replaced with more advanced NLP
+    return keywords.some((keyword) => message.includes(keyword));
+  }
+
   if (
     isEnhancedSearchActive &&
     usePinecone &&
     cleanedMessages.length > 0 &&
-    cleanedMessages[cleanedMessages.length - 1].role === 'user'
+    cleanedMessages[cleanedMessages.length - 1].role === 'user' &&
+    cleanedMessages[cleanedMessages.length - 1].content.length >
+      MIN_LAST_MESSAGE_LENGTH
   ) {
-    let lastMessageContent =
-      cleanedMessages[cleanedMessages.length - 1].content;
-
-    if (
-      lastMessageContent.length > MIN_LAST_MESSAGE_LENGTH &&
-      lastMessageContent.length < MAX_LAST_MESSAGE_LENGTH
-    ) {
-      if ((await isEnglish(lastMessageContent)) === false) {
-        const translatedContent = await translateToEnglish(lastMessageContent);
-        lastMessageContent = translatedContent;
+    const MAX_LENGTH_FOR_INDIVIDUAL_MESSAGE = 300;
+    const MAX_TOTAL_LENGTH = MAX_LAST_MESSAGE_LENGTH;
+    const ASSISTANT_SNIPPET_LENGTH = 300;
+    let combinedContent = '';
+    // Add a snippet of the latest assistant message for context
+    for (let i = cleanedMessages.length - 2; i >= 0; i--) {
+      if (cleanedMessages[i].role === 'assistant') {
+        combinedContent =
+          extractAssistantSnippet(
+            cleanedMessages[i].content,
+            ASSISTANT_SNIPPET_LENGTH,
+          ) + ' ';
+        break;
       }
+    }
 
-      const pineconeResults =
-        await queryPineconeVectorStore(lastMessageContent);
+    let latestUserMessage = cleanedMessages[cleanedMessages.length - 1].content;
+    let keywords = latestUserMessage.split(' ').slice(0, 5); // Example: Taking first 5 words as keywords
 
-      if (pineconeResults !== 'None') {
-        modelTemperature = pineconeTemperature;
+    // Process user messages starting from the most recent
+    for (let i = cleanedMessages.length - 1; i >= 0; i--) {
+      if (cleanedMessages[i].role === 'user') {
+        let messageContent = cleanedMessages[i].content;
 
-        systemMessage.content =
-          `${HACKERGPT_SYSTEM_PROMPT} ` +
-          `${process.env.SECRET_PINECONE_SYSTEM_PROMPT} ` +
-          `Context:\n ${pineconeResults}`;
+        // Check for relevance of the message
+        if (
+          !isMessageRelevant(messageContent, keywords) &&
+          i != cleanedMessages.length - 1
+        ) {
+          continue;
+        }
+
+        if (combinedContent.length + messageContent.length > MAX_TOTAL_LENGTH) {
+          let remainingLength = MAX_TOTAL_LENGTH - combinedContent.length;
+          let breakpoint = findNaturalBreakpoint(
+            messageContent,
+            remainingLength,
+          );
+          combinedContent =
+            messageContent.substring(0, breakpoint) + ' ' + combinedContent;
+          break;
+        } else if (messageContent.length > MAX_LENGTH_FOR_INDIVIDUAL_MESSAGE) {
+          let breakpoint = findNaturalBreakpoint(
+            messageContent,
+            MAX_LENGTH_FOR_INDIVIDUAL_MESSAGE,
+          );
+          combinedContent =
+            messageContent.substring(0, breakpoint) + ' ' + combinedContent;
+        } else {
+          combinedContent = messageContent + ' ' + combinedContent;
+        }
       }
+    }
+
+    if (!(await isEnglish(combinedContent))) {
+      combinedContent = await translateToEnglish(combinedContent);
+    }
+
+    const pineconeResults = await queryPineconeVectorStore(
+      combinedContent.trim(),
+    );
+
+    if (pineconeResults !== 'None') {
+      modelTemperature = pineconeTemperature;
+
+      systemMessage.content =
+        `${HACKERGPT_SYSTEM_PROMPT} ` +
+        `${process.env.SECRET_PINECONE_SYSTEM_PROMPT} ` +
+        `Context:\n ${pineconeResults}`;
     }
   }
 
