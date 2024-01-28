@@ -538,7 +538,7 @@ export const HackerGPTStream = async (
 
   const model1 = 'nousresearch/nous-hermes-2-mixtral-8x7b-dpo';
   const model2 = `${process.env.SECRET_HACKERGPT_OPENROUTER_MODEL}`;
-  const selectedModel = Math.random() < 0.5 ? model1 : model2;
+  const selectedModel = Math.random() < 0.66 ? model1 : model2;
 
   const requestBody = {
     model: selectedModel,
